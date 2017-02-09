@@ -1,0 +1,12 @@
+# librairies  + pip
+/bin
+/include
+/lib
+pip-selfcheck.json
+
+
+#fichier de config 
+*.ini
+*.conf
+*.cfg
+
