@@ -32,3 +32,6 @@ results = cursor1.fetchall()
 print(type(results))
 print(type(results[0]))
 print(results)
+
+
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
