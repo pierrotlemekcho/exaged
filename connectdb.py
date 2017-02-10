@@ -1,37 +1,42 @@
-import os
+#!/usr/bin/python
+
 import psycopg2
-import configparser
-from psycopg2.extras import DictCursor
+from config import config
+
 
 """ etablir connection POSTGRES """
 
-config = configparser.ConfigParser()
+def connect():
+    """ connect a la base PostgreSQL """
+    conn = None
+    try :
+        # lire les paramete de connection
+        params = config()
+        print(params)        
+        # connection au serveur
+        print(' connection au serveur Postgres  ....')
+        conn = psycopg2.connect(**params)
+
+        # creer un curseur 
+        cur = conn.cursor()
+
+        # exectuter un ordre
+        print('PostgresSQL base de donne version:')
+        cur.execute('SELECT version()')
+        db_version = cur.fetchone()
+        print(db_version)
+
+        # fermer la connection
+        cur.close
+    except (Exception, psycopg2.DatabaseError) as error :
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print(' connexion a la base fermé ')
+
+if __name__ == '__main__':
+    connect()
 
 
-with open('db_psql.cfg') as configfile:
-    config.read('db_psql.cfg')	
-
-for key in config['PRUNELLE'] :  print(key,config['PRUNELLE'][key])
-print(config)
-
-conn = psycopg2.connect("dbname=  user= host=  password=  ")
-print(type(conn))
-
-cursor = conn.cursor()
-print(type(cursor))
-cursor.execute("CREATE TABLE element ( numero INTEGER, nom VARCHAR(40), colonne INTEGER, ligne INTEGER);")
-cursor.execute("""INSERT INTO element ( numero, nom, colonne, ligne) VALUES
-        (1,'HYROGENNE',1,1),
-        (2, 'HELUIM',1,1)
-        """)
-print(" nbre de colonne inseres : %d" % cursor.rowcount)
-cursor.close()
-cursor1 = conn.cursor(cursor_factory=DictCursor)
-cursor1.execute('select * from element')
-results = cursor1.fetchall()
-print(type(results))
-print(type(results[0]))
-print(results)
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79
