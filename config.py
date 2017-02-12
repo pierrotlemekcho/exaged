@@ -2,7 +2,7 @@
 
 from configparser import ConfigParser
 
-def config(fichier='bases.cfg', section='localhost'):
+def config(fichier='bases.cfg', section='prunelle'):
 
     """ retourne db :parametre de connexion postgres
         lu dans dans fichier ,section """
