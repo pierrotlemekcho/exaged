@@ -1,0 +1,10 @@
+[localhost]
+dbname = example
+user = toto
+host = monsite.com
+password = secret
+port = 5432  		# port par default de Postgres
+
+
+
+
