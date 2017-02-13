@@ -26,6 +26,8 @@ def connect():
         db_version = cur.fetchone()
         print(db_version)
 
+	# penser a commit()
+
         # fermer la connection
         cur.close
     except (Exception, psycopg2.DatabaseError) as error :
