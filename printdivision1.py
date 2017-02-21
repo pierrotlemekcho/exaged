@@ -20,3 +20,23 @@ print(type(contacts))
 print(type(contacts[0]))
 for enr in contacts :
 	print(enr['Name'])
+
+
+
+print(' #################################')
+#----------------  un deuxieme groupe ------------
+
+contacts1 = api.relations.filter(select = 'ID,Name,Created,AddressLine1,AddressLine2,AddressLine3,Status,IsSales,IsSupplier' )
+print(type(contacts1))
+print(type(contacts1[0]))
+print(contacts1)
+for enr in contacts1 :
+	print(enr['Name'],enr['Status'],enr['IsSales'],enr['IsSupplier'])
+
+
+
+
+
+
+
+
