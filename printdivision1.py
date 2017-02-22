@@ -1,5 +1,6 @@
 from exactonline.api import ExactApi
 from exactonline.exceptions import ObjectDoesNotExist
+from exactonline.resource import GET, POST, PUT, DELETE
 from exactonline.storage import IniStorage
 
 # Create a function to get the api with your own storage backend.
@@ -33,10 +34,17 @@ print(contacts1)
 for enr in contacts1 :
 	print(enr['Name'],enr['Status'],enr['IsSales'],enr['IsSupplier'])
 
+#----------------- un troisieme groupe -------------
+contacts2 = api.restv1(GET('crm/Accounts?$top=2'))
+print(type(contacts2)) 
+print(contacts2)
+#iontact3 = api.rest(GET('v1/%d/crm/Accounts' % selected_division))
+#-------------------un quatrieme groupe
+#contact3 = api.rest(GET('v1/%d/crm/Accounts' % selected_division))
 
+#print(type(contacts3))
 
-
-
-
-
+contacts3 = api.restv1(GET('manufacturing/ShopOrders?$top=2'))
+print(type(contacts3)) 
+print(contacts3)
 
