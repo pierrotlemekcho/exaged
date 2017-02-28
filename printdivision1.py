@@ -48,3 +48,12 @@ contacts3 = api.restv1(GET('manufacturing/ShopOrders?$top=2'))
 print(type(contacts3)) 
 print(contacts3)
 
+#-------------------5eme groupe
+devis = api.restv1(GET('crm/Quotations?$select=InvoiceAccountName,QuotationNumber,QuotationLines&$expand=QuotationLines'))
+print(type(devis))
+print(len(devis))
+print(devis)
+
+
+
+
