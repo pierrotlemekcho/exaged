@@ -48,11 +48,22 @@ contacts3 = api.restv1(GET('manufacturing/ShopOrders?$top=2'))
 print(type(contacts3)) 
 print(contacts3)
 
-#-------------------5eme groupe
-devis = api.restv1(GET('crm/Quotations?$select=InvoiceAccountName,QuotationNumber,QuotationLines&$expand=QuotationLines'))
-print(type(devis))
+#-------------------5eme groupe ESSAIS SUR expand qui marche
+#devis = api.restv1(GET('crm/Quotations?$select=InvoiceAccountName,QuotationNumber,QuotationLines&$expand=QuotationLines'))
+#print(type(devis))
+#print(devis)
+
+#print(len(devis))
+#==================6 eme utile pour GED liste des devis 
+devis = api.restv1(GET('crm/Quotations?$select=InvoiceAccountName,QuotationNumber,' +
+	'Description,YourRef' +
+	'&$orderby=QuotationNumber'))
+for dev in devis :
+	print(' N° de devis :{} ====> Client {} \
+	==> your ref: {} ===> desc :{}'.format(dev['QuotationNumber'],dev['InvoiceAccountName'],\
+	dev['YourRef'],dev['Description']))
+
 print(len(devis))
-print(devis)
 
 
 
