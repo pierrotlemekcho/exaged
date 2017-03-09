@@ -30,5 +30,8 @@ for enr in contacts1 :
 
 print(type(contacts1))
 print(type(enr))
+print('==========set==========')
+scontacts1 = set(contacts1)
+print(type(scontacts1))
 
 
