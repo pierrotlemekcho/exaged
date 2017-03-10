@@ -41,8 +41,8 @@ def create_tables():
     finally:
         if conn is not None:
             conn.close()
- 
- 
+
+
 if __name__ == '__main__':
     create_tables()
 
