@@ -50,7 +50,7 @@ class Synchronizer:
 
     def synchronize_commandes(self):
         counter=0
-        commandes = self.api.restv1(GET('salesorder/SalesOrders?$select=OrderID,Description,OrderedBy,YourRef'))
+        commandes = self.api.restv1(GET('salesorder/SalesOrders?$select=OrderID,Description,OrderedBy,YourRef,OrderNumber'))
 
         for exact_order in commandes:
             commande = self.db.query(Commande).filter_by(
@@ -62,6 +62,8 @@ class Synchronizer:
             commande.tier = tier
             commande.exact_order_description = exact_order['Description']
             commande.exact_your_ref = exact_order['YourRef']
+            commande.exact_order_number = exact_order['OrderNumber']
+
             self.db.add(commande)
             counter = counter+1
         return counter
