@@ -9,5 +9,6 @@ class Commande(Base):
     exact_tier_id = Column(String(255), ForeignKey('tier.exact_id'))
     exact_order_description = Column(String(255))
     exact_your_ref = Column(String(255))
+    exact_order_number = Column(Integer)
     tier = relationship("Tier")
 
