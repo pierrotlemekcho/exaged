@@ -1,5 +1,7 @@
 from exaged.synchroniser import Synchronizer
 from exaged.model.tier import Tier
+from exaged.model.tier_client import TierClient
+from exaged.model.tier_supplier import TierSupplier
 from exaged.model.devis import Devis
 from exaged.model.commande import Commande
 from exaged import (
@@ -11,6 +13,7 @@ import configparser
 import logging
 import logging.config
 
+EXACT_DIVISION = 17923
 logging.config.fileConfig('exaged.ini')
 logger = logging.getLogger('exaged')
 
@@ -31,8 +34,10 @@ logger.info('Delete devis')
 db.query(Devis).delete()
 logger.info('Delete tiers')
 db.query(Tier).delete()
+db.query(TierClient).delete()
+db.query(TierSupplier).delete()
 
-synchronizer = Synchronizer(db, api, 17923)
+synchronizer = Synchronizer(db, api, EXACT_DIVISION)
 
 logger.info('Start Sync Tiers')
 counter = synchronizer.synchonize_tiers()
