@@ -17,6 +17,8 @@ fileConfig(config.config_file_name)
 # target_metadata = mymodel.Base.metadata
 from exaged.model import Base
 from exaged.model.tier import Tier
+from exaged.model.tier_client import TierClient
+from exaged.model.tier_supplier import TierSupplier
 from exaged.model.devis import Devis
 from exaged.model.commande import Commande
 target_metadata = Base.metadata
