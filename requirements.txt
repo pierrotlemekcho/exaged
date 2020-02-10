@@ -1,9 +1,9 @@
 alembic==1.0.1
+exactonline==0.3.4
 Mako==1.0.7
 MarkupSafe==1.0
 mysqlclient==1.3.13
 python-dateutil==2.7.3
 python-editor==1.0.3
 six==1.11.0
-SQLAlchemy==1.2.12
-exactonline==0.3.4
+SQLAlchemy==1.3.13
