@@ -13,4 +13,13 @@ class Commande(Base):
     exact_order_number = Column(Integer)
     exact_status = Column(Integer)
     exact_status_description = Column(String(255))
-    tier = relationship("Tier")
+    #tier = relationship("Tier")
+
+    def to_json(self):
+        return {
+            'id': self.exact_order_id,
+            'description': self.exact_order_description,
+            'order_number': self.exact_order_number,
+            'status_description': self.exact_status_description,
+            'status': self.exact_status
+        }
