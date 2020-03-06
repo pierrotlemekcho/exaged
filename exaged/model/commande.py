@@ -1,4 +1,5 @@
 from exaged.model import Base
+from exaged.model.tier import Tier
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -13,7 +14,7 @@ class Commande(Base):
     exact_order_number = Column(Integer)
     exact_status = Column(Integer)
     exact_status_description = Column(String(255))
-    #tier = relationship("Tier")
+    tier = relationship(Tier, uselist=False)
 
     def to_json(self):
         return {
