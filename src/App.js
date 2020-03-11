@@ -75,10 +75,10 @@ function App() {
         <List ordered>
           <List.Item>Choisir un camera en cliquant dessus</List.Item>
           <List.Item>Choisir un client</List.Item>
-          <List.Item>Choisir une facture</List.Item>
+          <List.Item>Choisir une commande</List.Item>
           <List.Item>Sauvegarder l'image</List.Item>
         </List>
-        <p>On peut aussi ne pas choisir de client et de facture et la photo sera sauvegardee dans le dossier "A trier"</p>
+        <p>On peut aussi ne pas choisir de client et de commande et la photo sera sauvegardée dans le dossier "A trier"</p>
       </Message>
       <Segment>
         <div>
