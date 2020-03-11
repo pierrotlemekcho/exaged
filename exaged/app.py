@@ -11,7 +11,6 @@ from datetime import datetime
 import io
 
 
-
 cameras = {}
 samba = {}
 
@@ -111,7 +110,7 @@ class CaptureVideoFeed(Resource):
             'Workspace$',
             filename,
             io.BytesIO(cv2.imencode('.jpg', frame)[1].tobytes()))
-        return { "filename": filename }
+        return {"filename": filename}
 
 
 class VideoFeed(Resource):

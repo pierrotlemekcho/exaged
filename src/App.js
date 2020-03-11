@@ -14,8 +14,8 @@ function App() {
   const [selectedCamera, setSelectedCamera] = useState('');
   const [selectedClientId, setSelectedClientId] = useState('');
   const [clients, setClients] = useState([]);
-  const [invoices, setInvoices] = useState([]);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [selectedOrderId, setSelectedOrderId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [lastImagePath, setLastImagePath] = useState('')
 
@@ -32,16 +32,16 @@ function App() {
     }));
   }
 
-  async function fetchInvoices(selectedClientId) {
+  async function fetchOrders(selectedClientId) {
     if (!selectedClientId) {
       return;
     }
     let result = await axios.get(`${api_url}/client/${selectedClientId}/commandes`);
-    setInvoices(result.data.map((invoice) => {
+    setOrders(result.data.map((order) => {
       return {
-        key: invoice.id,
-        text: `${invoice.order_number} - ${invoice.description}`,
-        value: invoice.id
+        key: order.id,
+        text: `${order.order_number} - ${order.description}`,
+        value: order.id
       }
     }));
   }
@@ -52,7 +52,7 @@ function App() {
     }
     setIsSaving(true);
     setLastImagePath('');
-    let result = await axios.post(`${api_url}/video_feed/${selectedCamera}/${selectedInvoiceId || 0}`);
+    let result = await axios.post(`${api_url}/video_feed/${selectedCamera}/${selectedOrderId || 0}`);
     setLastImagePath(result.data.filename);
     setIsSaving(false);
   }
@@ -64,7 +64,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    fetchInvoices(selectedClientId)
+    fetchOrders(selectedClientId)
   }, [selectedClientId]);
 
   return (
@@ -101,18 +101,18 @@ function App() {
                 placeholder="Choisir un Client" selection search options={clients}
                 onChange={(event, { value }) => {
                   setSelectedClientId(value);
-                  setSelectedInvoiceId('');
+                  setSelectedOrderId('');
                 }}
               />
             </Grid.Column>
             <Grid.Column>
               <Dropdown
-                placeholder="Choisir une Commande" selection search options={invoices}
-                onChange={(event, { value }) => setSelectedInvoiceId(value)}
+                placeholder="Choisir une Commande" selection search options={orders}
+                onChange={(event, { value }) => setSelectedOrderId(value)}
               />
             </Grid.Column>
             <Grid.Column>
-              <Button loading={isSaving} primary onClick={savePicture}>Sauvegarder photo {selectedInvoiceId? '': 'A trier'}</Button>
+              <Button loading={isSaving} primary onClick={savePicture}>Sauvegarder photo {selectedOrderId? '': 'A trier'}</Button>
             </Grid.Column>
           </Grid.Row>
         </Grid>
