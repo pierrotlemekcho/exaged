@@ -5,6 +5,17 @@ database_url = mysql://root:root@127.0.0.1/exaged
 # An exact api config file
 exact_api_config_file = exact_config.ini
 
+[exacams]
+parking_nord=rtsp://user:password@127.0.0.1:9000
+parking_bureau=rtsp://user:password@127.0.0.1:9001
+
+[samba]
+user=
+password=
+server_name=
+server_ip=
+port=
+
 [loggers]
 keys=root
 
