@@ -90,6 +90,14 @@ class CaptureVideoFeed(Resource):
             try:
                 conn.createDirectory(
                     'Workspace$',
+                    f"/documentsv7$"
+                )
+            except OperationFailure as e:
+                pass
+
+            try:
+                conn.createDirectory(
+                    'Workspace$',
                     f"/documentsv7$/OFFICE One Documents/"
                 )
             except OperationFailure as e:
