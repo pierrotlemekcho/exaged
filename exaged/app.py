@@ -84,7 +84,7 @@ class CaptureVideoFeed(Resource):
             except OperationFailure as e:
                 pass
 
-            filename = "photo"
+            filename = datetime.now().strftime('%Y%m%d%H%M%S')
             filename = f"/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}/{filename}.jpg"
         else:
             try:
@@ -110,7 +110,8 @@ class CaptureVideoFeed(Resource):
                 )
             except OperationFailure as e:
                 pass
-            filename = f"/documentsv7$/OFFICE One Documents/spool/photo.jpg"
+            filename = datetime.now().strftime('%Y%m%d%H%M%S')
+            filename = f"/documentsv7$/OFFICE One Documents/spool/{filename}.jpg"
 
         conn.storeFile(
             'Workspace$',
