@@ -85,7 +85,7 @@ class CaptureVideoFeed(Resource):
                 pass
 
             filename = "photo"
-            filename = f"/documents/32-Clients/{tier.exact_name}/{commande.exact_order_number}/{filename}.jpg"
+            filename = f"/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}/{filename}.jpg"
         else:
             try:
                 conn.createDirectory(
