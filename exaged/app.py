@@ -63,7 +63,7 @@ class CaptureVideoFeed(Resource):
             try:
                 conn.createDirectory(
                     'Workspace$',
-                    f"/documents/test-alex-exacam/"
+                    f"/documents/32-Clients/"
                 )
             except OperationFailure as e:
                 pass
@@ -71,7 +71,7 @@ class CaptureVideoFeed(Resource):
             try:
                 conn.createDirectory(
                     'Workspace$',
-                    f"/documents/test-alex-exacam/{tier.exact_name}"
+                    f"/documents/32-Clients/{tier.exact_name}"
                 )
             except OperationFailure as e:
                 pass
@@ -79,18 +79,18 @@ class CaptureVideoFeed(Resource):
             try:
                 conn.createDirectory(
                     'Workspace$',
-                    f"/documents/test-alex-exacam/{tier.exact_name}/{commande.exact_order_number}"
+                    f"/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}"
                 )
             except OperationFailure as e:
                 pass
 
-            filename = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = f"/documents/test-alex-exacam/{tier.exact_name}/{commande.exact_order_number}/{filename}.jpg"
+            filename = "photo"
+            filename = f"/documents/32-Clients/{tier.exact_name}/{commande.exact_order_number}/{filename}.jpg"
         else:
             try:
                 conn.createDirectory(
                     'Workspace$',
-                    f"/documents/test-alex-exacam/"
+                    f"/documentsv7$/OFFICE One Documents/"
                 )
             except OperationFailure as e:
                 pass
@@ -98,13 +98,11 @@ class CaptureVideoFeed(Resource):
             try:
                 conn.createDirectory(
                     'Workspace$',
-                    f"/documents/test-alex-exacam/a-trier"
+                    f"/documentsv7$/OFFICE One Documents/spool"
                 )
             except OperationFailure as e:
                 pass
-
-            filename = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = f"/documents/test-alex-exacam/a-trier/{filename}.jpg"
+            filename = f"/documentsv7$/OFFICE One Documents/spool/photo.jpg"
 
         conn.storeFile(
             'Workspace$',
