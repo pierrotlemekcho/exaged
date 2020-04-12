@@ -3,8 +3,7 @@ import './App.css';
 import axios from 'axios';
 import { Header, Container, Segment, Image, Dropdown, Button, Grid, Message, List } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css'
-
-
+import Dropzone from 'react-dropzone'
 
 let api_url = process.env.REACT_APP_API_URL || '';
 
@@ -18,6 +17,7 @@ function App() {
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [lastImagePath, setLastImagePath] = useState('')
+  const [files, setFiles] = useState([])
 
   async function fetchCameras() {
     let result =  await axios.get(`${api_url}/cameras`);
@@ -50,9 +50,22 @@ function App() {
     if (isSaving) {
       return;
     }
+
     setIsSaving(true);
+    const url =`${api_url}/video_feed/${selectedCamera}/${selectedOrderId || 0}`
+    let result;
+    if (selectedCamera === 'custom-file') {
+      var formData = new FormData();
+      formData.append("file", files[0]);
+      result = await axios.post(url, formData, {
+        headers : {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } else {
+      result = await axios.post(url);
+    }
     setLastImagePath('');
-    let result = await axios.post(`${api_url}/video_feed/${selectedCamera}/${selectedOrderId || 0}`);
     setLastImagePath(result.data.filename);
     setIsSaving(false);
   }
@@ -73,7 +86,7 @@ function App() {
       <Message info>
         <Message.Header>Instructions</Message.Header>
         <List ordered>
-          <List.Item>Choisir un camera en cliquant dessus</List.Item>
+          <List.Item>Choisir une image en cliquant sur une camera ou en téléchargeant une manuellement</List.Item>
           <List.Item>Choisir un client</List.Item>
           <List.Item>Choisir une commande</List.Item>
           <List.Item>Sauvegarder l'image</List.Item>
@@ -87,14 +100,32 @@ function App() {
               cameras.map((camera) =>
                 <Image src={`${api_url}/video_feed/${camera}`} className={(selectedCamera === camera) ? 'camera-selected': ''} alt={camera} onClick={() => setSelectedCamera(camera)}/>
               )
+
+            }
+            {
+              files.map(file => <Image src={URL.createObjectURL(file)} className={(selectedCamera === 'custom-file') ? 'camera-selected': ''} onClick={() => setSelectedCamera('custom-file')}/>)
             }
         </Image.Group>
 
-          Camera: selectionnee: {selectedCamera}
+          Camera selectionnee: {selectedCamera}
         </div>
       </Segment>
+      <Dropzone accept={'image/*'} multiple={false} onDrop={acceptedFiles => {
+        setFiles(acceptedFiles);
+        setSelectedCamera('custom-file');
+
+      }}>
+        {({getRootProps, getInputProps}) => (
+              <section>
+                <div {...getRootProps()}>
+                  <input {...getInputProps()} />
+                  <button class="ui fluid button yellow">Ajouter une photo manuellement</button>
+                </div>
+              </section>
+            )}
+      </Dropzone>
       <Segment>
-        <Grid columns={3}>
+        <Grid stackable columns={3}>
           <Grid.Row>
             <Grid.Column>
               <Dropdown
