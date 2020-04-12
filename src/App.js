@@ -63,7 +63,7 @@ function App() {
         }
       });
     } else {
-      result = await axios.post(`${api_url}/video_feed/${selectedCamera}/${selectedOrderId || 0}`);
+      result = await axios.post(url);
     }
     setLastImagePath('');
     setLastImagePath(result.data.filename);
