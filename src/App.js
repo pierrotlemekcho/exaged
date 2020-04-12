@@ -56,7 +56,6 @@ function App() {
     let result;
     if (selectedCamera === 'custom-file') {
       var formData = new FormData();
-      debugger;
       formData.append("file", files[0]);
       result = await axios.post(url, formData, {
         headers : {
@@ -112,7 +111,6 @@ function App() {
         </div>
       </Segment>
       <Dropzone accept={'image/*'} multiple={false} onDrop={acceptedFiles => {
-        debugger;
         setFiles(acceptedFiles);
         setSelectedCamera('custom-file');
 
