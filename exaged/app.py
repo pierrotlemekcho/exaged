@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 from flask_restful import Resource, Api
 import cv2
 import configparser
@@ -8,6 +8,7 @@ from exaged.model.commande import Commande
 from smb.SMBConnection import SMBConnection
 from smb.smb_structs import OperationFailure
 from datetime import datetime
+from pathlib import Path
 import io
 
 
@@ -45,12 +46,39 @@ class ClientCommandeResource(Resource):
         return [commande.to_json() for commande in commandes]
 
 
+def store_file_and_create_folders(conn, file_path, file_binary):
+    file_path = Path(file_path)
+    share = file_path.parts[1]
+    folders = file_path.parts[2:-1]
+
+    last_folder = '/'
+    for folder in folders:
+        last_folder += f'{folder}/'
+        try:
+            conn.createDirectory(
+                share,
+                last_folder
+            )
+        except OperationFailure:
+            pass
+
+    conn.storeFile(
+        share,
+        f'/{"/".join(file_path.parts[2:])}',
+        file_binary
+    )
+
+
 class CaptureVideoFeed(Resource):
     def post(self, camera_id, commande_id):
         db = database.factory()
         commande = db.query(Commande).filter(Commande.exact_order_id == commande_id).first();
-        video_capture = cv2.VideoCapture(f"{cameras[camera_id]}/profile1")
-        ret, frame = video_capture.read()
+        if camera_id == 'custom-file':
+            image = request.files['file']
+        else:
+            video_capture = cv2.VideoCapture(f"{cameras[camera_id]}/profile1")
+            ret, frame = video_capture.read()
+            image = io.BytesIO(cv2.imencode('.jpg', frame)[1].tobytes())
         conn = SMBConnection(
             samba["user"],
             samba["password"],
@@ -60,63 +88,12 @@ class CaptureVideoFeed(Resource):
         conn.connect(samba["server_ip"], int(samba["port"]))
         if (commande):
             tier = commande.tier
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documents/32-Clients/"
-                )
-            except OperationFailure as e:
-                pass
-
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documents/32-Clients/{tier.exact_name}"
-                )
-            except OperationFailure as e:
-                pass
-
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}"
-                )
-            except OperationFailure as e:
-                pass
-
             filename = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = f"/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}/{filename}.jpg"
+            filename = f"//Workspace$/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}/{filename}.jpg"
         else:
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documentsv7$"
-                )
-            except OperationFailure as e:
-                pass
-
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documentsv7$/OFFICE One Documents/"
-                )
-            except OperationFailure as e:
-                pass
-
-            try:
-                conn.createDirectory(
-                    'Workspace$',
-                    f"/documentsv7$/OFFICE One Documents/spool"
-                )
-            except OperationFailure as e:
-                pass
-            filename = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = f"/documentsv7$/OFFICE One Documents/spool/{filename}.jpg"
-
-        conn.storeFile(
-            'Workspace$',
-            filename,
-            io.BytesIO(cv2.imencode('.jpg', frame)[1].tobytes()))
+            date = datetime.now().strftime('%Y%m%d%H%M%S')
+            filename = f"//Documentsv7$/Application/OFFICE One Documents/spool/{date}.jpg"
+        store_file_and_create_folders(conn, filename, image)
         return {"filename": filename}
 
 
