@@ -92,7 +92,7 @@ class CaptureVideoFeed(Resource):
             filename = f"//Workspace$/documents/32-Clients/{tier.exact_name}/C{commande.exact_order_number}/{filename}.jpg"
         else:
             date = datetime.now().strftime('%Y%m%d%H%M%S')
-            filename = f"//Documentsv7$/Application/OFFICE One Documents/spool/{date}.jpg"
+            filename = f"//Documentsv7$/OFFICE One Documents/spool/{date}.jpg"
         store_file_and_create_folders(conn, filename, image)
         return {"filename": filename}
 
