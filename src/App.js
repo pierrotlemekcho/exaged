@@ -33,17 +33,18 @@ function App() {
   }
 
   async function fetchOrders(selectedClientId) {
-    if (!selectedClientId) {
-      return;
+    let orders = [];
+    if (selectedClientId) {
+      let result = await axios.get(`${api_url}/client/${selectedClientId}/commandes`);
+      orders = result.data.map((order) => {
+        return {
+          key: order.id,
+          text: `${order.order_number} - ${order.description}`,
+          value: order.id
+        }
+      });
     }
-    let result = await axios.get(`${api_url}/client/${selectedClientId}/commandes`);
-    setOrders(result.data.map((order) => {
-      return {
-        key: order.id,
-        text: `${order.order_number} - ${order.description}`,
-        value: order.id
-      }
-    }));
+    setOrders(orders);
   }
 
   async function savePicture() {
@@ -129,7 +130,9 @@ function App() {
           <Grid.Row>
             <Grid.Column>
               <Dropdown
+                value={selectedClientId}
                 placeholder="Choisir un Client" selection search options={clients}
+                clearable
                 onChange={(event, { value }) => {
                   setSelectedClientId(value);
                   setSelectedOrderId('');
@@ -138,8 +141,12 @@ function App() {
             </Grid.Column>
             <Grid.Column>
               <Dropdown
+                clearable
+                value={selectedOrderId}
                 placeholder="Choisir une Commande" selection search options={orders}
-                onChange={(event, { value }) => setSelectedOrderId(value)}
+                onChange={(event, { value }) => {
+                  setSelectedOrderId(value)
+                }}
               />
             </Grid.Column>
             <Grid.Column>
