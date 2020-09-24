@@ -33,4 +33,15 @@ $> PYTHONPATH=. alembic upgrade head
 
 ```
 python sync_exaged.py
+
+```
+
+# Frontend
+## Constuire le html
+```
+$> REACT_APP_API_URL=/api yarn build
+```
+## Deployer dans apache
+```
+$> cp -r  build/* /var/www/exacam/
 ```
