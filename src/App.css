@@ -1,3 +1,8 @@
 .camera-selected{
    border: 3px solid #2185d0;
 }
+
+.page-container {
+  margin-top: 7em;
+
+}
