@@ -50,7 +50,7 @@ def upgrade():
         sa.Column("exact_order_id", sa.String(length=255), nullable=True),
         sa.Column("exact_id", sa.String(length=255), nullable=True),
         sa.Column("exact_item_id", sa.String(length=255), nullable=True),
-        sa.Column("exact_line_mumber", sa.Integer(), nullable=True),
+        sa.Column("exact_line_number", sa.Integer(), nullable=True),
         sa.Column("exact_item_description", sa.String(length=255), nullable=True),
         sa.Column("exact_amount", sa.Numeric(precision=20, scale=3), nullable=True),
         sa.Column("exact_modified", sa.DateTime(), nullable=True),
