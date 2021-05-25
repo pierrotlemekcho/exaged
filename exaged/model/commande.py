@@ -21,7 +21,7 @@ class Commande(Base):
     tier = relationship(Tier, uselist=False)
     exact_amount = Column(Numeric(precision=20, scale=3))
     exact_modified = Column(DateTime)
-    lignes = relationship(LigneDeCommande)
+    lignes = relationship(LigneDeCommande, cascade="all, delete-orphan")
 
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(

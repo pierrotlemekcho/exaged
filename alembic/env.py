@@ -23,6 +23,7 @@ from exaged.model.article import Article
 from exaged.model.commande import Commande
 from exaged.model.devis import Devis
 from exaged.model.gamme import Gamme
+from exaged.model.last_sync_success import LastSyncSuccess
 from exaged.model.ligne_de_commande import LigneDeCommande
 from exaged.model.tier import Tier
 from exaged.model.tier_client import TierClient

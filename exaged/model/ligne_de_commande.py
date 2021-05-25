@@ -12,7 +12,7 @@ class LigneDeCommande(Base):
     exact_order_id = Column(String(255), ForeignKey("commande.exact_order_id"))
     exact_id = Column(String(255), unique=True)
     exact_item_id = Column(String(255), ForeignKey("article.exact_id"))
-    exact_line_mumber = Column(Integer)
+    exact_line_number = Column(Integer)
     exact_item_description = Column(String(255))
     exact_amount = Column(Numeric(precision=20, scale=3))
     exact_modified = Column(DateTime)
