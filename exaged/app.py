@@ -1,20 +1,22 @@
-from flask import Flask, Response, request
+from flask import Flask, Response, request, send_file
 from flask_restful import Resource, Api
 import cv2
+from PIL import Image
 import configparser
 from exaged import database
+from exaged import samba
 from exaged.model.tier_client import TierClient
 from exaged.model.commande import Commande
 from smb.SMBConnection import SMBConnection
 from smb.smb_structs import OperationFailure
 from datetime import datetime
 from pathlib import Path
+from pdf2image import convert_from_bytes
+import magic
 import io
 
 
 cameras = {}
-samba = {}
-
 
 class HelloWorld(Resource):
     def get(self):
@@ -44,6 +46,33 @@ class ClientCommandeResource(Resource):
         db = database.factory()
         commandes = db.query(Commande).filter(Commande.exact_tier_id == client_exact_id).filter(Commande.exact_status != 21)
         return [commande.to_json() for commande in commandes]
+
+
+def list_path(conn, path):
+    path_parts = Path(path).parts
+    share = path_parts[1]
+    folder = "/".join(path_parts[2:])
+    return conn.listPath(share, folder)
+
+def find_file_mime_type(conn, path):
+    path_parts = Path(path).parts
+    share = path_parts[1]
+    file_path = "/".join(path_parts[2:])
+    # Read first 2048 bytes
+    file_buffer = io.BytesIO()
+    conn.retrieveFileFromOffset(share, file_path, file_buffer, max_length=2048)
+    file_buffer.seek(0)
+
+    return magic.from_buffer(file_buffer.read(), mime=True)
+
+def retrieve_file(conn, path):
+    path_parts = Path(path).parts
+    share = path_parts[1]
+    file_path = "/".join(path_parts[2:])
+    file_buffer = io.BytesIO()
+    conn.retrieveFile(share, file_path, file_buffer)
+    file_buffer.seek(0)
+    return file_buffer
 
 
 def store_file_and_create_folders(conn, file_path, file_binary):
@@ -105,6 +134,68 @@ class VideoFeed(Resource):
         return Response(
             cv2.imencode('.jpg', small_frame)[1].tobytes(), mimetype='image/jpeg')
 
+class Folder(Resource):
+    def get(self, order_number):
+        db = database.factory()
+        smb_connection = samba.factory()
+        commande = db.query(Commande).filter(Commande.exact_order_number == order_number).first();
+        folder_content = list_path(smb_connection, commande.folder_path)
+        result = []
+        for content in  folder_content:
+            if not content.isDirectory:
+                url = f"/file/{commande.exact_order_id}/{content.filename}"
+                full_path = f"{commande.folder_path}/{content.filename}"
+                mimetype = find_file_mime_type(smb_connection, full_path)
+                if mimetype.startswith("image") or mimetype == "application/pdf":
+                    result.append({
+                        "filename": content.filename,
+                        "last_write_time": content.last_write_time,
+                        "file_size": content.file_size,
+                        "thumbnail_url": f"{url}/preview",
+                        "url": url,
+                        "mimetype": find_file_mime_type(smb_connection, full_path)
+                    })
+        return result
+
+
+class Thumbnail(Resource):
+    THUMBNAIL_SIZE=(400, 400)
+    def get(self, order_id, filename):
+        db = database.factory()
+        smb_connection = samba.factory()
+        commande = db.query(Commande).filter(Commande.exact_order_id == order_id).first();
+        full_path = f"{commande.folder_path}/{filename}"
+        file_type = find_file_mime_type(smb_connection, full_path)
+        if file_type.startswith("image"):
+            buffer_file = retrieve_file(smb_connection, full_path)
+            result = io.BytesIO()
+
+            file = Image.open(buffer_file)
+            file.thumbnail(self.THUMBNAIL_SIZE)
+            file.save(result, 'PNG', compress_level=9)
+            result.seek(0)
+            return send_file(result, mimetype="image/png")
+        elif file_type == "application/pdf":
+            buffer_file = retrieve_file(smb_connection, full_path)
+            images = convert_from_bytes(buffer_file.read(), size=self.THUMBNAIL_SIZE[0], fmt="png")
+            image = images[0]
+            result = io.BytesIO()
+            image.save(result, "PNG", compress_level=9)
+            result.seek(0)
+            return send_file(result, mimetype="image/png")
+        return
+
+class File(Resource):
+    def get(self, order_id, filename):
+        db = database.factory()
+        smb_connection = samba.factory()
+        commande = db.query(Commande).filter(Commande.exact_order_id == order_id).first();
+        full_path = f"{commande.folder_path}/{filename}"
+        buffer_file = retrieve_file(smb_connection, full_path)
+        mimetype = magic.from_buffer(buffer_file.read(), mime=True)
+        buffer_file.seek(0)
+        return send_file(buffer_file, mimetype=mimetype)
+
 
 def make_app():
     app = Flask('exacam')
@@ -112,7 +203,7 @@ def make_app():
     config = configparser.ConfigParser()
     config.read('exaged.ini')
     cameras.update(**config["exacams"])
-    samba.update(**config["samba"])
+    samba.configure(**config["samba"])
     database.configure(url=config['exaged']['database_url'])
 
     api.add_resource(HelloWorld, '/')
@@ -121,4 +212,7 @@ def make_app():
     api.add_resource(ClientsResource, '/clients')
     api.add_resource(ClientCommandeResource, '/client/<string:client_exact_id>/commandes')
     api.add_resource(CaptureVideoFeed, '/video_feed/<string:camera_id>/<string:commande_id>')
+    api.add_resource(Folder, '/folder/<string:order_number>')
+    api.add_resource(Thumbnail, '/file/<string:order_id>/<string:filename>/preview')
+    api.add_resource(File, '/file/<string:order_id>/<string:filename>')
     return app

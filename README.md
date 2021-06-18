@@ -45,3 +45,16 @@ $> REACT_APP_API_URL=/api yarn build
 ```
 $> cp -r  build/* /var/www/exacam/
 ```
+
+# Tunnels SSH
+
+Pour avoir access au Server samba (port 139) on ouvre un port local (-L) qui va nous connecter
+au server samba sur 192.168.2.200:139 a travers un tunnle ssh
+
+
+ssh -o ServerAliveInterval=30 -L 8999:192.168.2.200:139 alex@sifklic.sif-revetement.com -p 20022
+
+
+Pour avoir access a quelques cameras
+
+ssh -L 9000:192.168.2.101:443 alex@sifklic.sif-revetement.com -p 20022
