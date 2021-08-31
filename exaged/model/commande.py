@@ -35,6 +35,8 @@ class Commande(Base):
             "order_number": self.exact_order_number,
             "status_description": self.exact_status_description,
             "status": self.exact_status,
+            "lines": [ligne.to_json() for ligne in self.lignes],
+            "client_name": self.tier.exact_name,
         }
 
     @property

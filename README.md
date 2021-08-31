@@ -36,7 +36,12 @@ python sync_exaged.py
 
 ```
 
-# Frontend
+# Deployer le Frontend
+
+## Installer les dependences
+```
+$> yarn install
+```
 ## Constuire le html
 ```
 $> REACT_APP_API_URL=/api yarn build
@@ -52,7 +57,7 @@ Pour avoir access au Server samba (port 139) on ouvre un port local (-L) qui va 
 au server samba sur 192.168.2.200:139 a travers un tunnle ssh
 
 
-ssh -o ServerAliveInterval=30 -L 8999:192.168.2.200:139 alex@sifklic.sif-revetement.com -p 20022
+ssh -o ServerAliveInterval=30 -L 8999:192.168.2.201:139 alex@sifklic.sif-revetement.com -p 30022
 
 
 Pour avoir access a quelques cameras
