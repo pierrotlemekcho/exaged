@@ -25,21 +25,21 @@ function Plannif() {
   }
 
   async function fetchPlannifOrders() {
-    return axios.get(`${api_url}/plannif_commandes`);
+    return axios.get(`${api_url}/commandes?exact_status__in=12`);
   }
 
   async function savePlannifLines(lines) {
-    return axios.put(`${api_url}/plannif_lines`, lines);
+    return axios.put(`${api_url}/lines/bulk_update/`, lines);
   }
 
   function getOrderById(id) {
-    return plannifOrders.find((order) => order.id === id);
+    return plannifOrders.find((order) => order.exact_order_id === id);
   }
 
   useEffect(() => {
     fetchPlannifOrders().then((result) => {
-      setPlannifOrders(result.data);
-      const allLines = result.data.map((order) => order.lines).flat();
+      setPlannifOrders(result.data.results);
+      const allLines = result.data.results.map((order) => order.lines).flat();
       const initialPlanning = [
         makeDay(
           undefined,
@@ -127,7 +127,6 @@ function Plannif() {
 
     const result = {};
 
-    debugger;
     result[droppableSource.droppableId] = makeDay(
       source.date,
       sourceOrderLines
@@ -199,7 +198,8 @@ function Plannif() {
                                 provided.draggableProps.style
                               )}
                             >
-                              {order.client_name} {order.order_number} {"    "}
+                              {order.exact_tier.exact_name} {order.order_number}{" "}
+                              {"    "}
                               {moneyFormatter.format(line.exact_amount)}
                               {order.description} {line.item_code} {line.gamme}{" "}
                             </div>

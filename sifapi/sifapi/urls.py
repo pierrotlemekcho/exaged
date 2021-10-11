@@ -22,11 +22,7 @@ router = routers.DefaultRouter()
 router.register(r"cameras", views.WebCamViewSet)
 router.register(r"clients", views.ClientViewSet)
 router.register(r"commandes", views.CommandeViewSet)
-router.register(
-    r"clients/(?P<exact_tier_id>[\w-]+)/commandes",
-    views.ClientCommandeViewSet,
-    basename="client-commandes",
-)
+router.register(r"lines", views.BulkOrderLineViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
