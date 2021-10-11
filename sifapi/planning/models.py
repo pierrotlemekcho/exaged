@@ -63,7 +63,12 @@ class Devis(models.Model):
 
 class Gamme(models.Model):
     exact_item = models.ForeignKey(
-        Article, on_delete=models.CASCADE, blank=True, null=True, to_field="exact_id"
+        Article,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        to_field="exact_id",
+        related_name="gamme",
     )
     exact_value = models.CharField(max_length=255, blank=True, null=True)
     exact_modified = models.DateTimeField(blank=True, null=True)
@@ -84,7 +89,12 @@ class LastSyncSuccess(models.Model):
 
 class LigneDeCommande(models.Model):
     exact_order = models.ForeignKey(
-        Commande, models.CASCADE, blank=True, null=True, to_field="exact_order_id"
+        Commande,
+        models.CASCADE,
+        blank=True,
+        null=True,
+        to_field="exact_order_id",
+        related_name="lines",
     )
     exact_id = models.CharField(unique=True, max_length=255, blank=True, null=True)
     exact_item = models.ForeignKey(
@@ -106,6 +116,17 @@ class LigneDeCommande(models.Model):
 
     class Meta:
         db_table = "ligne_de_commande"
+
+    @property
+    def item_code(self):
+        if self.exact_item:
+            return self.exact_item.exact_code
+
+    @property
+    def gamme(self):
+        if self.exact_item and self.exact_item.gamme.first():
+            return self.exact_item.gamme.first().exact_value
+        return ""
 
 
 class Tier(models.Model):
