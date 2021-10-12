@@ -25,10 +25,12 @@ class OrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "schedule_priority",
             "item_code",
             "gamme",
+            "gamme_list",
             "exact_order_id",
             "exact_line_number",
             "exact_amount",
         ]
+        read_only_fields = ["gamme", "gamme_list", "item_code"]
 
 
 class CommandeSerializer(serializers.HyperlinkedModelSerializer):
