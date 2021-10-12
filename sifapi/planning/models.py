@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 
@@ -127,6 +129,10 @@ class LigneDeCommande(models.Model):
         if self.exact_item and self.exact_item.gamme.first():
             return self.exact_item.gamme.first().exact_value
         return ""
+
+    @property
+    def gamme_list(self):
+        return re.findall(r"((?:[^_\*\$#]+)|(?:#|\$|\*){1})", self.gamme)
 
 
 class Tier(models.Model):

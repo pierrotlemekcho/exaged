@@ -211,6 +211,12 @@ function Plannif() {
                   </div>
                 )}
               </Droppable>
+              <Header as="h3">
+                {"Total: "}
+                {day.orderLines.reduce((amount, line) => {
+                  return amount + Number(line.exact_amount);
+                }, 0)}
+              </Header>
             </>
           );
         })}
