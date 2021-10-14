@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 from .models import (Article, Commande, Devis, Gamme, LastSyncSuccess,
-                     LigneDeCommande, Tier, TierClient, TierSupplier, WebCam)
+                     LigneDeCommande, Operation, Tier, TierClient,
+                     TierSupplier, WebCam)
 
 
 @admin.register(Commande)
@@ -36,4 +37,9 @@ class TierAdmin(admin.ModelAdmin):
 
 @admin.register(WebCam)
 class WebCamAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Operation)
+class OperationAdmin(admin.ModelAdmin):
     pass

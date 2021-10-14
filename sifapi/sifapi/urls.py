@@ -23,6 +23,7 @@ router.register(r"cameras", views.WebCamViewSet)
 router.register(r"clients", views.ClientViewSet)
 router.register(r"commandes", views.CommandeViewSet)
 router.register(r"lines", views.BulkOrderLineViewSet)
+router.register(r"operations", views.OperationViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

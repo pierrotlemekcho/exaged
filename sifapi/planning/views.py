@@ -9,10 +9,11 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from planning import samba
-from planning.models import Commande, LigneDeCommande, Tier, WebCam
+from planning.models import Commande, LigneDeCommande, Operation, Tier, WebCam
 from planning.renderers import JPEGRenderer
-from planning.serializers import (CommandeSerializer, OrderLineSerializer,
-                                  TierSerializer, WebCamSerializer)
+from planning.serializers import (CommandeSerializer, OperationSerializer,
+                                  OrderLineSerializer, TierSerializer,
+                                  WebCamSerializer)
 
 EXACT_STATUS_CLOSED = 21
 EXACT_STATUS_CANCELLED = 45
@@ -75,6 +76,11 @@ class CommandeViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = {"exact_tier_id": ["exact"], "exact_status": ["exact", "in"]}
 
 
+class OperationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = OperationSerializer
+    queryset = Operation.objects.all().order_by("-id")
+
+
 ## Only updat for now.
 class BulkOrderLineViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     serializer_class = OrderLineSerializer
@@ -83,8 +89,7 @@ class BulkOrderLineViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     @action(detail=False, methods=["put"], url_name="bulk_update")
     def bulk_update(self, request, **kwargs):
         data = {  # we need to separate out the id from the data
-            i['id']: {k: v for k, v in i.items() if k != 'id'}
-            for i in request.data
+            i["id"]: {k: v for k, v in i.items() if k != "id"} for i in request.data
         }
 
         for inst in self.get_queryset().filter(id__in=data.keys()):

@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.db import models
@@ -115,6 +116,7 @@ class LigneDeCommande(models.Model):
     # are ordered by the frontend
     schedule_priority = models.IntegerField(default=1)
     scheduled_at = models.DateTimeField(blank=True, null=True)
+    gamme_status = models.TextField(blank=True)
 
     class Meta:
         db_table = "ligne_de_commande"
@@ -180,3 +182,11 @@ class WebCam(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class Operation(models.Model):
+    code = models.CharField(max_length=255)
+    hex_color = models.CharField(max_length=7)
+
+    def __str__(self):
+        return f"{self.code}"
