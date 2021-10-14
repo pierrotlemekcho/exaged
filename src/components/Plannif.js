@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Header, Container, Button } from "semantic-ui-react";
+import { Grid, Ref, Header, Container, Button } from "semantic-ui-react";
 import config from "config.js";
 import axios from "axios";
 import { addDays, format, isSameDay } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { BigNumber } from "bignumber.js";
 
 function Plannif() {
   const api_url = config.api_url;
@@ -189,7 +190,7 @@ function Plannif() {
       // some basic styles to make the items look a bit nicer
 
       // change background colour if dragging
-      background: isDragging ? "lightgreen" : "grey",
+      background: isDragging ? "lightgreen" : "",
 
       // styles we need to apply on draggables
       ...draggableStyle,
@@ -208,79 +209,101 @@ function Plannif() {
                 {day.date
                   ? format(day.date, "iiii d/MM/y")
                   : "Lignes non planifiees"}{" "}
+                {" - "}
+                {moneyFormatter.format(
+                  day.orderLines.reduce((amount, line) => {
+                    return amount.plus(BigNumber(line.exact_amount));
+                  }, BigNumber(0))
+                )}
               </Header>
               <Droppable
                 isDraggingOver={day.date === undefined}
                 droppableId={`${dayIndex}`}
               >
                 {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    style={getListStyle(snapshot.isDraggingOver)}
-                    {...provided.droppableProps}
-                  >
-                    {day.orderLines.map((line, lineIndex) => {
-                      const order = getOrderById(line.exact_order_id);
-                      return (
-                        <Draggable
-                          key={line.exact_id}
-                          draggableId={line.exact_id}
-                          index={lineIndex}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={getItemStyle(
-                                snapshot.isDragging,
-                                provided.draggableProps.style
-                              )}
-                            >
-                              {order.exact_tier.exact_name} {order.order_number}{" "}
-                              {"    "}
-                              {moneyFormatter.format(line.exact_amount)}
-                              {order.description} {line.item_code} {line.gamme}{" "}
-                              {line.gamme_list.map((gamme, position) => {
-                                return (
-                                  <Button
-                                    className={
-                                      line.gamme_status[position] === "1"
-                                        ? "green"
-                                        : ""
-                                    }
-                                    style={
-                                      line.gamme_status[position] !== "1"
-                                        ? {
-                                            "background-color": findHexColor(
-                                              gamme
-                                            ),
+                  <Ref innerRef={provided.innerRef}>
+                    <Grid
+                      divided="vertically"
+                      columns={6}
+                      style={getListStyle(snapshot.isDraggingOver)}
+                      {...provided.droppableProps}
+                    >
+                      {day.orderLines.map((line, lineIndex) => {
+                        const order = getOrderById(line.exact_order_id);
+                        return (
+                          <Draggable
+                            key={line.exact_id}
+                            draggableId={line.exact_id}
+                            index={lineIndex}
+                          >
+                            {(provided, snapshot) => (
+                              <Ref innerRef={provided.innerRef}>
+                                <Grid.Row
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  style={getItemStyle(
+                                    snapshot.isDragging,
+                                    provided.draggableProps.style
+                                  )}
+                                >
+                                  <Grid.Column width={2}>
+                                    {order.exact_tier.exact_name}
+                                  </Grid.Column>
+                                  <Grid.Column width={2}>
+                                    {order.exact_order_number}
+                                  </Grid.Column>
+                                  <Grid.Column width={2}>
+                                    {order.exact_order_description}
+                                  </Grid.Column>
+                                  <Grid.Column width={2}>
+                                    {line.item_code}
+                                  </Grid.Column>
+                                  <Grid.Column width={2}>
+                                    {moneyFormatter.format(line.exact_amount)}
+                                  </Grid.Column>
+                                  <Grid.Column width={6}>
+                                    {line.gamme_list.map((gamme, position) => {
+                                      return (
+                                        <Button
+                                          className={
+                                            line.gamme_status[position] === "1"
+                                              ? "green"
+                                              : ""
                                           }
-                                        : {}
-                                    }
-                                    onClick={() =>
-                                      toggleGamme(dayIndex, lineIndex, position)
-                                    }
-                                  >
-                                    {gamme}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
-                  </div>
+                                          style={
+                                            line.gamme_status[position] !== "1"
+                                              ? {
+                                                  backgroundColor: findHexColor(
+                                                    gamme
+                                                  ),
+                                                }
+                                              : {}
+                                          }
+                                          onClick={() =>
+                                            toggleGamme(
+                                              dayIndex,
+                                              lineIndex,
+                                              position
+                                            )
+                                          }
+                                        >
+                                          {gamme}
+                                        </Button>
+                                      );
+                                    })}
+                                  </Grid.Column>
+                                </Grid.Row>
+                              </Ref>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                      {provided.placeholder}
+                    </Grid>
+                  </Ref>
                 )}
               </Droppable>
-              <Header as="h3">
-                {"Total: "}
-                {day.orderLines.reduce((amount, line) => {
-                  return amount + Number(line.exact_amount);
-                }, 0)}
-              </Header>
+              <Header as="h3">{"Total: "}</Header>
             </>
           );
         })}
