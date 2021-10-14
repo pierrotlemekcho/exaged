@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from planning.models import Commande, LigneDeCommande, Tier, WebCam
+from planning.models import Commande, LigneDeCommande, Operation, Tier, WebCam
 
 
 class WebCamSerializer(serializers.HyperlinkedModelSerializer):
@@ -15,9 +15,16 @@ class TierSerializer(serializers.HyperlinkedModelSerializer):
         fields = ["id", "exact_id", "exact_name"]
 
 
+class OperationSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Operation
+        fields = ["id", "hex_color", "code"]
+
+
 class OrderLineSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = LigneDeCommande
+
         fields = [
             "id",
             "exact_id",
@@ -25,6 +32,7 @@ class OrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "schedule_priority",
             "item_code",
             "gamme",
+            "gamme_status",
             "gamme_list",
             "exact_order_id",
             "exact_line_number",

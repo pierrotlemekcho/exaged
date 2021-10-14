@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Header, Container } from "semantic-ui-react";
+import { Header, Container, Button } from "semantic-ui-react";
 import config from "config.js";
 import axios from "axios";
 import { addDays, format, isSameDay } from "date-fns";
@@ -11,6 +11,7 @@ function Plannif() {
   const [plannifOrders, setPlannifOrders] = useState([]);
   const [planning, setPlanning] = useState([]);
   const [changedDays, setChangedDays] = useState([]);
+  const [allOperations, setAllOperations] = useState([]);
 
   const moneyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -24,8 +25,43 @@ function Plannif() {
     };
   }
 
+  function findHexColor(gamme) {
+    const operation = allOperations.find(
+      (operation) => operation.code === gamme
+    );
+    return operation ? operation.hex_color : "wrong";
+  }
+
+  function setCharAt(str, index, chr) {
+    if (index > str.length - 1) return str;
+    return str.substring(0, index) + chr + str.substring(index + 1);
+  }
+
+  function toggleGamme(dayIndex, lineIndex, position) {
+    const line = planning[dayIndex].orderLines[lineIndex];
+    let newGammeStatus = line.gamme_status;
+    const gammeList = line.gamme_list;
+    if (!line.gamme_status || line.gamme_status.length !== gammeList.length) {
+      newGammeStatus = "".padStart(gammeList.length, "0");
+    }
+    if (newGammeStatus[position] === "1") {
+      newGammeStatus = setCharAt(newGammeStatus, position, "0");
+    } else {
+      newGammeStatus = setCharAt(newGammeStatus, position, "1");
+    }
+
+    line.gamme_status = newGammeStatus;
+    planning[dayIndex].orderLines[lineIndex] = line;
+    setPlanning([...planning]);
+    setChangedDays([planning[dayIndex]]);
+  }
+
   async function fetchPlannifOrders() {
     return axios.get(`${api_url}/commandes?exact_status__in=12`);
+  }
+
+  async function fetchAllOperations() {
+    return axios.get(`${api_url}/operations/`);
   }
 
   async function savePlannifLines(lines) {
@@ -37,6 +73,9 @@ function Plannif() {
   }
 
   useEffect(() => {
+    fetchAllOperations().then((result) =>
+      setAllOperations(result.data.results)
+    );
     fetchPlannifOrders().then((result) => {
       setPlannifOrders(result.data.results);
       const allLines = result.data.results.map((order) => order.lines).flat();
@@ -161,7 +200,7 @@ function Plannif() {
     <Container className="page-container">
       <DragDropContext onDragEnd={onDragEnd}>
         <Header as="h1"> Plannif </Header>
-        {planning.map((day, index) => {
+        {planning.map((day, dayIndex) => {
           return (
             <>
               <Header as="h2">
@@ -172,7 +211,7 @@ function Plannif() {
               </Header>
               <Droppable
                 isDraggingOver={day.date === undefined}
-                droppableId={`${index}`}
+                droppableId={`${dayIndex}`}
               >
                 {(provided, snapshot) => (
                   <div
@@ -180,13 +219,13 @@ function Plannif() {
                     style={getListStyle(snapshot.isDraggingOver)}
                     {...provided.droppableProps}
                   >
-                    {day.orderLines.map((line, index) => {
+                    {day.orderLines.map((line, lineIndex) => {
                       const order = getOrderById(line.exact_order_id);
                       return (
                         <Draggable
                           key={line.exact_id}
                           draggableId={line.exact_id}
-                          index={index}
+                          index={lineIndex}
                         >
                           {(provided, snapshot) => (
                             <div
@@ -202,6 +241,31 @@ function Plannif() {
                               {"    "}
                               {moneyFormatter.format(line.exact_amount)}
                               {order.description} {line.item_code} {line.gamme}{" "}
+                              {line.gamme_list.map((gamme, position) => {
+                                return (
+                                  <Button
+                                    className={
+                                      line.gamme_status[position] === "1"
+                                        ? "green"
+                                        : ""
+                                    }
+                                    style={
+                                      line.gamme_status[position] !== "1"
+                                        ? {
+                                            "background-color": findHexColor(
+                                              gamme
+                                            ),
+                                          }
+                                        : {}
+                                    }
+                                    onClick={() =>
+                                      toggleGamme(dayIndex, lineIndex, position)
+                                    }
+                                  >
+                                    {gamme}
+                                  </Button>
+                                );
+                              })}
                             </div>
                           )}
                         </Draggable>
