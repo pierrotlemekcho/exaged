@@ -1,6 +1,7 @@
 import json
 import re
 
+from django.conf import settings
 from django.db import models
 
 
@@ -45,6 +46,10 @@ class Commande(models.Model):
 
     class Meta:
         db_table = "commande"
+
+    @property
+    def folder_path(self):
+        return f"{settings.SHARE_ORDER_FOLDER}{self.exact_tier.exact_name}/C{self.exact_order_number}/"
 
 
 class Devis(models.Model):
