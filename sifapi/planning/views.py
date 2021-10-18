@@ -2,11 +2,14 @@ import io
 from datetime import datetime
 
 import cv2
-from django.shortcuts import render
-from rest_framework import mixins, permissions, status, viewsets
+from django.http import FileResponse
+from pdf2image import convert_from_bytes
+from PIL import Image
+from rest_framework import mixins, permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from planning import samba
 from planning.models import Commande, LigneDeCommande, Operation, Tier, WebCam
@@ -75,14 +78,82 @@ class CommandeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Commande.objects.all().order_by("-id")
     filterset_fields = {"exact_tier_id": ["exact"], "exact_status": ["exact", "in"]}
 
+    @action(detail=True, url_name="files")
+    def files(self, request, **kwargs):
+        order = self.get_object()
+        smb_connection = samba.factory()
+        folder_content = samba.list_path(smb_connection, order.folder_path)
+        result = []
+        for content in folder_content:
+            if not content.isDirectory:
+                full_path = f"{order.folder_path}/{content.filename}"
+                mimetype = samba.find_file_mime_type(smb_connection, full_path)
+                if mimetype.startswith("image") or mimetype == "application/pdf":
+                    result.append(
+                        {
+                            "filename": content.filename,
+                            "last_write_time": content.last_write_time,
+                            "file_size": content.file_size,
+                            "mimetype": samba.find_file_mime_type(
+                                smb_connection, full_path
+                            ),
+                        }
+                    )
+        return Response(data=result)
+
+    @action(detail=True, url_name="thumbnail")
+    def thumbnail(self, request, **kwargs):
+        THUMBNAIL_SIZE = (400, 400)
+        order = self.get_object()
+        smb_connection = samba.factory()
+        filename = request.query_params.get("filename")
+        folder_content = samba.list_path(smb_connection, order.folder_path)
+        # Throw an error if file not a direct children
+        next(x for x in folder_content if x.filename == filename)
+        full_path = f"{order.folder_path}/{filename}"
+        file_type = samba.find_file_mime_type(smb_connection, full_path)
+        if file_type.startswith("image"):
+            buffer_file = samba.retrieve_file(smb_connection, full_path)
+            result = io.BytesIO()
+
+            file = Image.open(buffer_file)
+            file.thumbnail(THUMBNAIL_SIZE)
+            file.save(result, "PNG", compress_level=9)
+            result.seek(0)
+            return FileResponse(result)
+        elif file_type == "application/pdf":
+            buffer_file = samba.retrieve_file(smb_connection, full_path)
+            images = convert_from_bytes(
+                buffer_file.read(), size=THUMBNAIL_SIZE[0], fmt="png"
+            )
+            image = images[0]
+            result = io.BytesIO()
+            image.save(result, "PNG", compress_level=9)
+            result.seek(0)
+            return FileResponse(result)
+        return
+
+    @action(detail=True, url_name="file_download")
+    def file_download(self, request, **kwargs):
+        order = self.get_object()
+        smb_connection = samba.factory()
+        filename = request.query_params.get("filename")
+        folder_content = samba.list_path(smb_connection, order.folder_path)
+        # Throw an error if file not a direct children
+        next(x for x in folder_content if x.filename == filename)
+        full_path = f"{order.folder_path}/{filename}"
+        buffer_file = samba.retrieve_file(smb_connection, full_path)
+        return FileResponse(buffer_file)
+
 
 class OperationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = OperationSerializer
     queryset = Operation.objects.all().order_by("-id")
 
 
-## Only updat for now.
+# Only updat for now.
 class BulkOrderLineViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    permission_classes = [AllowAny]
     serializer_class = OrderLineSerializer
     queryset = LigneDeCommande.objects.all()
 

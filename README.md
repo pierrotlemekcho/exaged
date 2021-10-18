@@ -70,6 +70,11 @@ We create a local samba server for development purposes.
 
 OSX doesn't allow connection to localhost so we create a 127.0.0.2 interface 
 
+```
+sudo ifconfig lo0 alias 127.0.0.2 up
+```
+
+```
 docker run -it \
       --expose 137 -p 127.0.0.2:137:137  \
       --expose 138 -p 127.0.0.2:138:138  \
@@ -80,4 +85,4 @@ docker run -it \
       -s "Workspace$;/share;yes;no;no" \
       -g "netbios name=SIF-NEW" \
       -g "server min protocol = LANMAN1"
-
+```

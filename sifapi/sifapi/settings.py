@@ -166,3 +166,5 @@ SAMBA = {
     "server_ip": "127.0.0.2",
     "port": "139",
 }
+
+SHARE_ORDER_FOLDER = "//Workspace$/documents/32-Clients/"

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Grid, Ref, Header, Container, Button } from "semantic-ui-react";
+import { Grid, Ref, Header, Container, Button, Icon } from "semantic-ui-react";
 import config from "config.js";
-import axios from "axios";
+import axiosInstance from "../axiosApi";
 import { addDays, format, isSameDay } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { BigNumber } from "bignumber.js";
+import { Link } from "react-router-dom";
 
 function Plannif() {
   const api_url = config.api_url;
@@ -19,11 +20,13 @@ function Plannif() {
     currency: "EUR",
   });
 
-  function makeDay(date, orderLines) {
-    return {
-      date: date,
-      orderLines: orderLines,
-    };
+  function makeDay(date, orderLines, sort = false) {
+    if (sort) {
+      orderLines.sort((a, b) => {
+        return (a.schedule_priority || 0) - (b.schedule_priority || 0);
+      });
+    }
+    return { date, orderLines };
   }
 
   function findHexColor(gamme) {
@@ -58,15 +61,15 @@ function Plannif() {
   }
 
   async function fetchPlannifOrders() {
-    return axios.get(`${api_url}/commandes?exact_status__in=12`);
+    return axiosInstance.get(`${api_url}/commandes?exact_status__in=12`);
   }
 
   async function fetchAllOperations() {
-    return axios.get(`${api_url}/operations/`);
+    return axiosInstance.get(`${api_url}/operations/`);
   }
 
   async function savePlannifLines(lines) {
-    return axios.put(`${api_url}/lines/bulk_update/`, lines);
+    return axiosInstance.put(`${api_url}/lines/bulk_update/`, lines);
   }
 
   function getOrderById(id) {
@@ -93,7 +96,7 @@ function Plannif() {
             line.scheduled_at && isSameDay(date, new Date(line.scheduled_at))
           );
         });
-        initialPlanning.push(makeDay(date, lines));
+        initialPlanning.push(makeDay(date, lines, true));
       }
       setPlanning(initialPlanning);
     });
@@ -250,7 +253,13 @@ function Plannif() {
                                     {order.exact_tier.exact_name}
                                   </Grid.Column>
                                   <Grid.Column width={2}>
-                                    {order.exact_order_number}
+                                    {order.exact_order_number}{" "}
+                                    <Link
+                                      to={`/documents?orderid=${order.id}`}
+                                      target="_blank"
+                                    >
+                                      <Icon name="folder open" />
+                                    </Link>
                                   </Grid.Column>
                                   <Grid.Column width={2}>
                                     {order.exact_order_description}
