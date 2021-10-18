@@ -1,3 +1,0 @@
-SHARE_ORDER_FOLDER = "//Workspace$/documents/32-Clients/"
-EXACT_STATUS_CLOSED = 21
-EXACT_STATUS_CANCELLED = 45
