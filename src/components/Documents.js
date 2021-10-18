@@ -1,6 +1,6 @@
-import React, { useEffect, useState, createRef } from 'react';
-import config from 'config.js'
-import axios from 'axios';
+import React, { useEffect, useState, createRef } from "react";
+import config from "config.js";
+import axios from "axios";
 import {
   Header,
   Container,
@@ -9,28 +9,28 @@ import {
   Card,
   Modal,
   Icon,
-  Button
-} from 'semantic-ui-react'
-import PdfPreview from 'components/PdfPreview.js'
+  Button,
+} from "semantic-ui-react";
+import PdfPreview from "components/PdfPreview.js";
 
-function Documents() {
-
+function Documents( {orderId}) {
   const api_url = config.api_url;
 
-  const [selectedOrderNumber, setSelectedOrderNumber] = useState('');
-  const [folderFiles, setFolderFiles] = useState([])
-  const [currentFile, setCurrentFile] = useState(null)
-  const [rotate, setRotate] = useState(0)
-  const orderInput = createRef(null)
+  const [folderFiles, setFolderFiles] = useState([]);
+  const [currentFile, setCurrentFile] = useState(null);
+  const [rotate, setRotate] = useState(0);
+  const orderInput = createRef(null);
 
-
-
-  async function fetchFolderContent() {
-    let selectedOrderNumber = orderInput.current.inputRef.current.value;
-    setSelectedOrderNumber(selectedOrderNumber);
-    let result =  await axios.get(`${api_url}/folder/${selectedOrderNumber}`);
+  async function fetchFolderContent(orderId) {
+    let result = await axios.get(
+      `${api_url}/commandes/${orderId}/files`
+    );
     setFolderFiles(result.data);
   }
+
+  useEffect(() => {
+    fetchFolderContent(orderId);
+  },[])
 
   function rotateToTheRight() {
     let newRotate = rotate + 90;
@@ -41,27 +41,20 @@ function Documents() {
   }
 
   return (
-    <Container className='page-container'>
-      <Header as='h1'> Documents </Header>
-      <Input action={{
-        content: 'Chercher',
-        onClick: fetchFolderContent
-      }}
-        placeholder='Chercher' 
-        ref={orderInput}
-      />
-      <br />
-      <br />
+    <Container className="page-container">
+      <Header as="h1"> Documents </Header>
       <Card.Group>
-        {folderFiles.map(file => 
+        {folderFiles.map((file) => (
           <Card onClick={() => setCurrentFile(file)}>
-            <Image src={`${api_url}${file.thumbnail_url}`} />
+            <Image
+              src={`${api_url}/commandes/${orderId}/thumbnail?filename=${file.filename}`}
+            />
           </Card>
-        )}
+        ))}
       </Card.Group>
 
-      {currentFile
-        ?  <Modal
+      {currentFile ? (
+        <Modal
           onClose={() => setCurrentFile(null)}
           open={true}
           onOpen={() => setRotate(0)}
@@ -69,24 +62,26 @@ function Documents() {
         >
           <Modal.Header>{currentFile.filename}</Modal.Header>
           <Modal.Content>
-            {currentFile.mimetype === 'application/pdf'
-             ? <PdfPreview rotate={rotate} fileUrl={currentFile.url} />
-            : <Image src={currentFile.url}/>
-            }
+            {currentFile.mimetype === "application/pdf" ? (
+              <PdfPreview rotate={rotate} fileUrl={`${api_url}/commandes/${orderId}/file_download?filename=${currentFile.filename}`} />
+            ) : (
+              <Image
+                src={`${api_url}/commandes/${orderId}/file_download?filename=${currentFile.filename}`}
+              />
+            )}
           </Modal.Content>
           <Modal.Actions>
             <Button onClick={rotateToTheRight}>
-              <Icon name="redo"/> Faire Pivoter la page
+              <Icon name="redo" /> Faire Pivoter la page
             </Button>
-            <Button color='black' onClick={() => setCurrentFile()}>
+            <Button color="black" onClick={() => setCurrentFile()}>
               Fermer
             </Button>
           </Modal.Actions>
         </Modal>
-        : null
-      }
+      ) : null}
     </Container>
   );
 }
 
-export default Documents
+export default Documents;

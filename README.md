@@ -62,4 +62,27 @@ ssh -o ServerAliveInterval=30 -L 8999:192.168.2.201:139 alex@sifklic.sif-revetem
 
 Pour avoir access a quelques cameras
 
-ssh -L 9000:192.168.2.101:443 alex@sifklic.sif-revetement.com -p 20022
+ ssh -L 9000:192.168.2.111:554 -L 9001:192.168.2.112:554 -o ServerAliveInterval=30 alex@82.127.103.1 -p 30022
+
+# Server Samba local:
+
+We create a local samba server for development purposes.
+
+OSX doesn't allow connection to localhost so we create a 127.0.0.2 interface 
+
+```
+sudo ifconfig lo0 alias 127.0.0.2 up
+```
+
+```
+docker run -it \
+      --expose 137 -p 127.0.0.2:137:137  \
+      --expose 138 -p 127.0.0.2:138:138  \
+      --expose 139 -p 127.0.0.2:139:139  \
+      --expose 445 -p 127.0.0.2:445:445 \
+      -d dperson/samba -p \
+      -u "exaged;Ged.2020" \
+      -s "Workspace$;/share;yes;no;no" \
+      -g "netbios name=SIF-NEW" \
+      -g "server min protocol = LANMAN1"
+```
