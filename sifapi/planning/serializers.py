@@ -37,6 +37,8 @@ class OrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "exact_order_id",
             "exact_line_number",
             "exact_amount",
+            "parts_status",
+            "comments",
         ]
         read_only_fields = ["gamme", "gamme_list", "item_code"]
 

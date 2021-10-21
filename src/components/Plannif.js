@@ -1,8 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Grid, Ref, Header, Container, Button, Icon } from "semantic-ui-react";
+import React, { useEffect, useState, useCallback } from "react";
+import {
+  Grid,
+  Ref,
+  Header,
+  Container,
+  Form,
+  TextArea,
+  Button,
+  Icon,
+  Dropdown,
+} from "semantic-ui-react";
 import config from "config.js";
 import axiosInstance from "../axiosApi";
-import { addDays, format, isSameDay } from "date-fns";
+import AutoSaveText from "./AutoSaveText";
+import {
+  addDays,
+  format,
+  isSameDay,
+  isBefore,
+  startOfDay,
+  isToday,
+} from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { BigNumber } from "bignumber.js";
 import { Link } from "react-router-dom";
@@ -12,8 +30,47 @@ function Plannif() {
 
   const [plannifOrders, setPlannifOrders] = useState([]);
   const [planning, setPlanning] = useState([]);
-  const [changedDays, setChangedDays] = useState([]);
+  const [changedLines, setChangedLines] = useState([]);
   const [allOperations, setAllOperations] = useState([]);
+
+  const partsStatusColorMap = {
+    sur_place: "green",
+    partiel: "yellow",
+    non_dispo: "red",
+  };
+
+  const partsStatusOptions = [
+    {
+      key: 0,
+      value: "sur_place",
+      text: "Sur place",
+      label: {
+        circular: true,
+        empty: true,
+        color: "green",
+      },
+    },
+    {
+      key: 1,
+      value: "partiel",
+      text: "Partiel",
+      label: {
+        circular: true,
+        empty: true,
+        color: "yellow",
+      },
+    },
+    {
+      key: 2,
+      value: "non_dispo",
+      text: "Non dispo",
+      label: {
+        circular: true,
+        empty: true,
+        color: "red",
+      },
+    },
+  ];
 
   const moneyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -26,6 +83,11 @@ function Plannif() {
         return (a.schedule_priority || 0) - (b.schedule_priority || 0);
       });
     }
+    orderLines = orderLines.map((line, index) => {
+      line.scheduled_at = date ? startOfDay(date) : undefined;
+      line.schedule_priority = index;
+      return line;
+    });
     return { date, orderLines };
   }
 
@@ -57,7 +119,24 @@ function Plannif() {
     line.gamme_status = newGammeStatus;
     planning[dayIndex].orderLines[lineIndex] = line;
     setPlanning([...planning]);
-    setChangedDays([planning[dayIndex]]);
+    setChangedLines([line]);
+  }
+
+  function saveLineComments(dayIndex, lineIndex, value) {
+    const line = planning[dayIndex].orderLines[lineIndex];
+    line.comments = value;
+    planning[dayIndex].orderLines[lineIndex] = line;
+    setPlanning([...planning]);
+    setChangedLines([line]);
+  }
+
+  function setPartsStatus(dayIndex, lineIndex, status) {
+    debugger;
+    const line = planning[dayIndex].orderLines[lineIndex];
+    line.parts_status = status;
+    planning[dayIndex].orderLines[lineIndex] = line;
+    setPlanning([...planning]);
+    setChangedLines([line]);
   }
 
   async function fetchPlannifOrders() {
@@ -75,6 +154,13 @@ function Plannif() {
   function getOrderById(id) {
     return plannifOrders.find((order) => order.exact_order_id === id);
   }
+  const todayRef = useCallback((node) => {
+    if (node !== null) {
+      const yOffset = -70;
+      const y = node.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y });
+    }
+  }, []);
 
   useEffect(() => {
     fetchAllOperations().then((result) =>
@@ -86,10 +172,17 @@ function Plannif() {
       const initialPlanning = [
         makeDay(
           undefined,
-          allLines.filter((line) => !line.scheduled_at)
+          allLines.filter(
+            (line) =>
+              (line.gamme && !line.scheduled_at) ||
+              isBefore(
+                startOfDay(new Date(line.scheduled_at)),
+                addDays(startOfDay(new Date()), -3)
+              )
+          )
         ),
       ];
-      for (let i = -3; i < 15; i++) {
+      for (let i = -7; i < 31; i++) {
         const date = addDays(new Date(), i);
         const lines = allLines.filter((line) => {
           return (
@@ -103,25 +196,14 @@ function Plannif() {
   }, []);
 
   useEffect(() => {
-    savePlannifLines(
-      changedDays
-        .filter((day) => day.date)
-        .map((day) => {
-          return day.orderLines.map((line, index) => {
-            line.scheduled_at = day.date;
-            line.schedule_priority = index;
-            return line;
-          });
-        })
-        .flat()
-    );
-  }, [changedDays]);
+    savePlannifLines(changedLines);
+  }, [changedLines]);
 
   function onDragEnd(result) {
     const { source, destination } = result;
 
     // dropped outside the list or in the unscheduled orders
-    if (!destination || destination.droppableId === 0) {
+    if (!destination || destination.droppableId === "0") {
       return;
     }
 
@@ -133,7 +215,7 @@ function Plannif() {
       const newPlanning = [...planning];
       newPlanning[sInd] = day;
       setPlanning(newPlanning);
-      setChangedDays([day]);
+      setChangedLines(day.orderLines);
     } else {
       const result = moveOrderLine(
         planning[sInd],
@@ -145,7 +227,12 @@ function Plannif() {
       newPlanning[sInd] = result[sInd];
       newPlanning[dInd] = result[dInd];
       setPlanning(newPlanning);
-      setChangedDays([newPlanning[sInd], newPlanning[dInd]]);
+      let changedLines = [...newPlanning[dInd].orderLines];
+      // Only save the source lines index if it's not the unscheduled orders
+      if (sInd > 0) {
+        changedLines.push(...newPlanning[sInd].orderLines);
+      }
+      setChangedLines(changedLines);
     }
   }
 
@@ -201,12 +288,12 @@ function Plannif() {
   }
 
   return (
-    <Container className="page-container">
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Header as="h1"> Plannif </Header>
-        {planning.map((day, dayIndex) => {
-          return (
-            <>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Header as="h1"> Plannif </Header>
+      {planning.map((day, dayIndex) => {
+        return (
+          <>
+            <Ref innerRef={isToday(day.date) ? todayRef : undefined}>
               <Header as="h2">
                 {" "}
                 {day.date
@@ -219,105 +306,136 @@ function Plannif() {
                   }, BigNumber(0))
                 )}
               </Header>
-              <Droppable
-                isDraggingOver={day.date === undefined}
-                droppableId={`${dayIndex}`}
-              >
-                {(provided, snapshot) => (
-                  <Ref innerRef={provided.innerRef}>
-                    <Grid
-                      divided="vertically"
-                      columns={6}
-                      style={getListStyle(snapshot.isDraggingOver)}
-                      {...provided.droppableProps}
-                    >
-                      {day.orderLines.map((line, lineIndex) => {
-                        const order = getOrderById(line.exact_order_id);
-                        return (
-                          <Draggable
-                            key={line.exact_id}
-                            draggableId={line.exact_id}
-                            index={lineIndex}
-                          >
-                            {(provided, snapshot) => (
-                              <Ref innerRef={provided.innerRef}>
-                                <Grid.Row
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  style={getItemStyle(
-                                    snapshot.isDragging,
-                                    provided.draggableProps.style
-                                  )}
+            </Ref>
+            <Droppable
+              isDraggingOver={day.date === undefined}
+              droppableId={`${dayIndex}`}
+            >
+              {(provided, snapshot) => (
+                <Ref innerRef={provided.innerRef}>
+                  <Grid
+                    divided="vertically"
+                    columns={7}
+                    style={getListStyle(snapshot.isDraggingOver)}
+                    {...provided.droppableProps}
+                  >
+                    {day.orderLines.map((line, lineIndex) => {
+                      const order = getOrderById(line.exact_order_id);
+                      return (
+                        <Draggable
+                          key={line.exact_id}
+                          draggableId={line.exact_id}
+                          index={lineIndex}
+                        >
+                          {(provided, snapshot) => (
+                            <Ref innerRef={provided.innerRef}>
+                              <Grid.Row
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                style={getItemStyle(
+                                  snapshot.isDragging,
+                                  provided.draggableProps.style
+                                )}
+                              >
+                                <Grid.Column
+                                  width={1}
+                                  color={
+                                    partsStatusColorMap[line.parts_status] ||
+                                    "red"
+                                  }
                                 >
-                                  <Grid.Column width={2}>
-                                    {order.exact_tier.exact_name}
-                                  </Grid.Column>
-                                  <Grid.Column width={2}>
-                                    {order.exact_order_number}{" "}
-                                    <Link
-                                      to={`/documents?orderid=${order.id}`}
-                                      target="_blank"
-                                    >
-                                      <Icon name="folder open" />
-                                    </Link>
-                                  </Grid.Column>
-                                  <Grid.Column width={2}>
-                                    {order.exact_order_description}
-                                  </Grid.Column>
-                                  <Grid.Column width={2}>
-                                    {line.item_code}
-                                  </Grid.Column>
-                                  <Grid.Column width={2}>
-                                    {moneyFormatter.format(line.exact_amount)}
-                                  </Grid.Column>
-                                  <Grid.Column width={6}>
-                                    {line.gamme_list.map((gamme, position) => {
-                                      return (
-                                        <Button
-                                          className={
-                                            line.gamme_status[position] === "1"
-                                              ? "green"
-                                              : ""
-                                          }
-                                          style={
-                                            line.gamme_status[position] !== "1"
-                                              ? {
-                                                  backgroundColor: findHexColor(
-                                                    gamme
-                                                  ),
-                                                }
-                                              : {}
-                                          }
-                                          onClick={() =>
-                                            toggleGamme(
-                                              dayIndex,
-                                              lineIndex,
-                                              position
-                                            )
-                                          }
-                                        >
-                                          {gamme}
-                                        </Button>
-                                      );
-                                    })}
-                                  </Grid.Column>
-                                </Grid.Row>
-                              </Ref>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      {provided.placeholder}
-                    </Grid>
-                  </Ref>
-                )}
-              </Droppable>
-              <Header as="h3">{"Total: "}</Header>
-            </>
-          );
-        })}
-      </DragDropContext>
-    </Container>
+                                  <Dropdown
+                                    value={line.parts_status || "non_dispo"}
+                                    fluid
+                                    labeled
+                                    options={partsStatusOptions}
+                                    onChange={(e, { value }) =>
+                                      setPartsStatus(dayIndex, lineIndex, value)
+                                    }
+                                  />
+                                </Grid.Column>
+                                <Grid.Column width={2}>
+                                  {order.exact_tier.exact_name}
+                                </Grid.Column>
+                                <Grid.Column width={1}>
+                                  {order.exact_order_number}{" "}
+                                  <Link
+                                    to={`/documents?orderid=${order.id}`}
+                                    target="_blank"
+                                  >
+                                    <Icon name="folder open" />
+                                  </Link>
+                                </Grid.Column>
+                                <Grid.Column width={2}>
+                                  {order.exact_order_description}
+                                </Grid.Column>
+                                <Grid.Column width={1}>
+                                  {line.item_code}
+                                </Grid.Column>
+                                <Grid.Column width={2}>
+                                  {moneyFormatter.format(line.exact_amount)}
+                                </Grid.Column>
+                                <Grid.Column width={2}>
+                                  <Form>
+                                    <AutoSaveText
+                                      placeholder="Commentaires"
+                                      value={line.comments}
+                                      onSave={(value) => {
+                                        return saveLineComments(
+                                          dayIndex,
+                                          lineIndex,
+                                          value
+                                        );
+                                      }}
+                                    />
+                                  </Form>
+                                </Grid.Column>
+                                <Grid.Column width={4}>
+                                  {line.gamme_list.map((gamme, position) => {
+                                    return (
+                                      <Button
+                                        className={
+                                          line.gamme_status[position] === "1"
+                                            ? "green"
+                                            : ""
+                                        }
+                                        style={
+                                          line.gamme_status[position] !== "1"
+                                            ? {
+                                                backgroundColor: findHexColor(
+                                                  gamme
+                                                ),
+                                              }
+                                            : {}
+                                        }
+                                        onClick={() =>
+                                          toggleGamme(
+                                            dayIndex,
+                                            lineIndex,
+                                            position
+                                          )
+                                        }
+                                      >
+                                        {gamme}
+                                      </Button>
+                                    );
+                                  })}
+                                </Grid.Column>
+                              </Grid.Row>
+                            </Ref>
+                          )}
+                        </Draggable>
+                      );
+                    })}
+                    {provided.placeholder}
+                  </Grid>
+                </Ref>
+              )}
+            </Droppable>
+          </>
+        );
+      })}
+    </DragDropContext>
   );
 }
 

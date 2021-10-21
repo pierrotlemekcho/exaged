@@ -96,6 +96,16 @@ class LastSyncSuccess(models.Model):
 
 
 class LigneDeCommande(models.Model):
+    PARTS_ON_SITE = "sur_place"
+    PARTS_PARTIAL = "partiel"
+    PARTS_UNAVAILABLE = "non_dispo"
+
+    PARTS_STATUS_CHOICES = [
+        (PARTS_ON_SITE, "Sur Place"),
+        (PARTS_PARTIAL, "Partiel"),
+        (PARTS_UNAVAILABLE, "Non Dispo"),
+    ]
+
     exact_order = models.ForeignKey(
         Commande,
         models.CASCADE,
@@ -121,7 +131,13 @@ class LigneDeCommande(models.Model):
     # are ordered by the frontend
     schedule_priority = models.IntegerField(default=1)
     scheduled_at = models.DateTimeField(blank=True, null=True)
+    # To keep track if the gamme operations have been performed
     gamme_status = models.TextField(blank=True)
+    # Are the parts on site or no
+    parts_status = models.CharField(
+        max_length=10, choices=PARTS_STATUS_CHOICES, default=PARTS_UNAVAILABLE
+    )
+    comments = models.TextField(blank=True)
 
     class Meta:
         db_table = "ligne_de_commande"
