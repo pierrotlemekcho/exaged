@@ -3,9 +3,7 @@ import {
   Grid,
   Ref,
   Header,
-  Container,
   Form,
-  TextArea,
   Button,
   Icon,
   Dropdown,
@@ -26,6 +24,8 @@ import { BigNumber } from "bignumber.js";
 import { Link } from "react-router-dom";
 
 function Plannif() {
+  const DAYS_IN_THE_PAST = 7;
+  const DAYS_IN_THE_FUTURE = 31;
   const api_url = config.api_url;
 
   const [plannifOrders, setPlannifOrders] = useState([]);
@@ -177,12 +177,12 @@ function Plannif() {
               (line.gamme && !line.scheduled_at) ||
               isBefore(
                 startOfDay(new Date(line.scheduled_at)),
-                addDays(startOfDay(new Date()), -3)
+                addDays(startOfDay(new Date()), -DAYS_IN_THE_PAST)
               )
           )
         ),
       ];
-      for (let i = -7; i < 31; i++) {
+      for (let i = -DAYS_IN_THE_PAST; i < DAYS_IN_THE_FUTURE; i++) {
         const date = addDays(new Date(), i);
         const lines = allLines.filter((line) => {
           return (
