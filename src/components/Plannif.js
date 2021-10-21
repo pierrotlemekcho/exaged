@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Grid,
   Ref,
@@ -12,7 +12,15 @@ import {
 } from "semantic-ui-react";
 import config from "config.js";
 import axiosInstance from "../axiosApi";
-import { addDays, format, isSameDay, isBefore, startOfDay } from "date-fns";
+import AutoSaveText from "./AutoSaveText";
+import {
+  addDays,
+  format,
+  isSameDay,
+  isBefore,
+  startOfDay,
+  isToday,
+} from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { BigNumber } from "bignumber.js";
 import { Link } from "react-router-dom";
@@ -22,7 +30,7 @@ function Plannif() {
 
   const [plannifOrders, setPlannifOrders] = useState([]);
   const [planning, setPlanning] = useState([]);
-  const [changedDays, setChangedDays] = useState([]);
+  const [changedLines, setChangedLines] = useState([]);
   const [allOperations, setAllOperations] = useState([]);
 
   const partsStatusColorMap = {
@@ -75,6 +83,11 @@ function Plannif() {
         return (a.schedule_priority || 0) - (b.schedule_priority || 0);
       });
     }
+    orderLines = orderLines.map((line, index) => {
+      line.scheduled_at = date ? startOfDay(date) : undefined;
+      line.schedule_priority = index;
+      return line;
+    });
     return { date, orderLines };
   }
 
@@ -106,7 +119,15 @@ function Plannif() {
     line.gamme_status = newGammeStatus;
     planning[dayIndex].orderLines[lineIndex] = line;
     setPlanning([...planning]);
-    setChangedDays([planning[dayIndex]]);
+    setChangedLines([line]);
+  }
+
+  function saveLineComments(dayIndex, lineIndex, value) {
+    const line = planning[dayIndex].orderLines[lineIndex];
+    line.comments = value;
+    planning[dayIndex].orderLines[lineIndex] = line;
+    setPlanning([...planning]);
+    setChangedLines([line]);
   }
 
   function setPartsStatus(dayIndex, lineIndex, status) {
@@ -115,7 +136,7 @@ function Plannif() {
     line.parts_status = status;
     planning[dayIndex].orderLines[lineIndex] = line;
     setPlanning([...planning]);
-    setChangedDays([planning[dayIndex]]);
+    setChangedLines([line]);
   }
 
   async function fetchPlannifOrders() {
@@ -133,6 +154,13 @@ function Plannif() {
   function getOrderById(id) {
     return plannifOrders.find((order) => order.exact_order_id === id);
   }
+  const todayRef = useCallback((node) => {
+    if (node !== null) {
+      const yOffset = -70;
+      const y = node.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y });
+    }
+  }, []);
 
   useEffect(() => {
     fetchAllOperations().then((result) =>
@@ -154,7 +182,7 @@ function Plannif() {
           )
         ),
       ];
-      for (let i = -3; i < 15; i++) {
+      for (let i = -7; i < 31; i++) {
         const date = addDays(new Date(), i);
         const lines = allLines.filter((line) => {
           return (
@@ -168,25 +196,14 @@ function Plannif() {
   }, []);
 
   useEffect(() => {
-    savePlannifLines(
-      changedDays
-        .filter((day) => day.date)
-        .map((day) => {
-          return day.orderLines.map((line, index) => {
-            line.scheduled_at = startOfDay(day.date);
-            line.schedule_priority = index;
-            return line;
-          });
-        })
-        .flat()
-    );
-  }, [changedDays]);
+    savePlannifLines(changedLines);
+  }, [changedLines]);
 
   function onDragEnd(result) {
     const { source, destination } = result;
 
     // dropped outside the list or in the unscheduled orders
-    if (!destination || destination.droppableId === 0) {
+    if (!destination || destination.droppableId === "0") {
       return;
     }
 
@@ -198,7 +215,7 @@ function Plannif() {
       const newPlanning = [...planning];
       newPlanning[sInd] = day;
       setPlanning(newPlanning);
-      setChangedDays([day]);
+      setChangedLines(day.orderLines);
     } else {
       const result = moveOrderLine(
         planning[sInd],
@@ -210,7 +227,12 @@ function Plannif() {
       newPlanning[sInd] = result[sInd];
       newPlanning[dInd] = result[dInd];
       setPlanning(newPlanning);
-      setChangedDays([newPlanning[sInd], newPlanning[dInd]]);
+      let changedLines = [...newPlanning[dInd].orderLines];
+      // Only save the source lines index if it's not the unscheduled orders
+      if (sInd > 0) {
+        changedLines.push(...newPlanning[sInd].orderLines);
+      }
+      setChangedLines(changedLines);
     }
   }
 
@@ -271,18 +293,20 @@ function Plannif() {
       {planning.map((day, dayIndex) => {
         return (
           <>
-            <Header as="h2">
-              {" "}
-              {day.date
-                ? format(day.date, "iiii d/MM/y")
-                : "Lignes non planifiees"}{" "}
-              {" - "}
-              {moneyFormatter.format(
-                day.orderLines.reduce((amount, line) => {
-                  return amount.plus(BigNumber(line.exact_amount));
-                }, BigNumber(0))
-              )}
-            </Header>
+            <Ref innerRef={isToday(day.date) ? todayRef : undefined}>
+              <Header as="h2">
+                {" "}
+                {day.date
+                  ? format(day.date, "iiii d/MM/y")
+                  : "Lignes non planifiees"}{" "}
+                {" - "}
+                {moneyFormatter.format(
+                  day.orderLines.reduce((amount, line) => {
+                    return amount.plus(BigNumber(line.exact_amount));
+                  }, BigNumber(0))
+                )}
+              </Header>
+            </Ref>
             <Droppable
               isDraggingOver={day.date === undefined}
               droppableId={`${dayIndex}`}
@@ -321,8 +345,7 @@ function Plannif() {
                                   }
                                 >
                                   <Dropdown
-                                    defaultValue={"non_dispo"}
-                                    value={line.parts_status}
+                                    value={line.parts_status || "non_dispo"}
                                     fluid
                                     labeled
                                     options={partsStatusOptions}
@@ -353,9 +376,19 @@ function Plannif() {
                                   {moneyFormatter.format(line.exact_amount)}
                                 </Grid.Column>
                                 <Grid.Column width={2}>
-                                  <form>
-                                    <TextArea placeholder="Commentaires"></TextArea>
-                                  </form>
+                                  <Form>
+                                    <AutoSaveText
+                                      placeholder="Commentaires"
+                                      value={line.comments}
+                                      onSave={(value) => {
+                                        return saveLineComments(
+                                          dayIndex,
+                                          lineIndex,
+                                          value
+                                        );
+                                      }}
+                                    />
+                                  </Form>
                                 </Grid.Column>
                                 <Grid.Column width={4}>
                                   {line.gamme_list.map((gamme, position) => {
