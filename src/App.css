@@ -1,8 +1,19 @@
-.camera-selected{
-   border: 3px solid #2185d0;
+.camera-selected {
+  border: 3px solid #2185d0;
 }
 
 .page-container {
   margin-top: 7em;
+}
+.planning .ui.container {
+  margin-top: 7em;
+  width: calc(100% - 20px);
+}
 
+.planning {
+  font-size: 12px !important;
+}
+
+.planning .ui .button {
+  font-size: 12px !important;
 }
