@@ -54,6 +54,7 @@ class CommandeSerializer(serializers.HyperlinkedModelSerializer):
             "exact_order_id",
             "exact_order_number",
             "exact_order_description",
+            "exact_your_ref",
             "exact_tier_id",
             "exact_status",
             "lines",
