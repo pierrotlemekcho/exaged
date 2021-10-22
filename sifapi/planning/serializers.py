@@ -12,7 +12,7 @@ class WebCamSerializer(serializers.HyperlinkedModelSerializer):
 class TierSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Tier
-        fields = ["id", "exact_id", "exact_name"]
+        fields = ["id", "exact_id", "exact_name", "hex_color"]
 
 
 class OperationSerializer(serializers.HyperlinkedModelSerializer):
@@ -54,6 +54,7 @@ class CommandeSerializer(serializers.HyperlinkedModelSerializer):
             "exact_order_id",
             "exact_order_number",
             "exact_order_description",
+            "exact_your_ref",
             "exact_tier_id",
             "exact_status",
             "lines",

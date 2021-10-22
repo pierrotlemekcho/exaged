@@ -32,6 +32,8 @@ class LigneDeCommandeAdmin(admin.ModelAdmin):
 
 @admin.register(Tier)
 class TierAdmin(admin.ModelAdmin):
+    list_display = ["id", "exact_name", "exact_account_code", "hex_color", "color_span"]
+    list_filter = ["exact_name"]
     pass
 
 
@@ -42,4 +44,4 @@ class WebCamAdmin(admin.ModelAdmin):
 
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["id", "code", "hex_color", "color_span"]

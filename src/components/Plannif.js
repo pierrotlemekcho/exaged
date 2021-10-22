@@ -7,6 +7,8 @@ import {
   Button,
   Icon,
   Dropdown,
+  Container,
+  Popup,
 } from "semantic-ui-react";
 import config from "config.js";
 import axiosInstance from "../axiosApi";
@@ -19,6 +21,7 @@ import {
   startOfDay,
   isToday,
 } from "date-fns";
+import { fr } from "date-fns/locale";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { BigNumber } from "bignumber.js";
 import { Link } from "react-router-dom";
@@ -275,12 +278,12 @@ function Plannif() {
     };
   }
 
-  function getItemStyle(isDragging, draggableStyle) {
+  function getItemStyle(isDragging, draggableStyle, background = "") {
     return {
       // some basic styles to make the items look a bit nicer
 
       // change background colour if dragging
-      background: isDragging ? "lightgreen" : "",
+      background: isDragging ? "lightgreen" : background,
 
       // styles we need to apply on draggables
       ...draggableStyle,
@@ -288,154 +291,180 @@ function Plannif() {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Header as="h1"> Plannif </Header>
-      {planning.map((day, dayIndex) => {
-        return (
-          <>
-            <Ref innerRef={isToday(day.date) ? todayRef : undefined}>
-              <Header as="h2">
-                {" "}
-                {day.date
-                  ? format(day.date, "iiii d/MM/y")
-                  : "Lignes non planifiees"}{" "}
-                {" - "}
-                {moneyFormatter.format(
-                  day.orderLines.reduce((amount, line) => {
-                    return amount.plus(BigNumber(line.exact_amount));
-                  }, BigNumber(0))
-                )}
-              </Header>
-            </Ref>
-            <Droppable
-              isDraggingOver={day.date === undefined}
-              droppableId={`${dayIndex}`}
-            >
-              {(provided, snapshot) => (
-                <Ref innerRef={provided.innerRef}>
-                  <Grid
-                    divided="vertically"
-                    columns={7}
-                    style={getListStyle(snapshot.isDraggingOver)}
-                    {...provided.droppableProps}
-                  >
-                    {day.orderLines.map((line, lineIndex) => {
-                      const order = getOrderById(line.exact_order_id);
-                      return (
-                        <Draggable
-                          key={line.exact_id}
-                          draggableId={line.exact_id}
-                          index={lineIndex}
-                        >
-                          {(provided, snapshot) => (
-                            <Ref innerRef={provided.innerRef}>
-                              <Grid.Row
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                style={getItemStyle(
-                                  snapshot.isDragging,
-                                  provided.draggableProps.style
-                                )}
-                              >
-                                <Grid.Column
-                                  width={1}
-                                  color={
-                                    partsStatusColorMap[line.parts_status] ||
-                                    "red"
-                                  }
-                                >
-                                  <Dropdown
-                                    value={line.parts_status || "non_dispo"}
-                                    fluid
-                                    labeled
-                                    options={partsStatusOptions}
-                                    onChange={(e, { value }) =>
-                                      setPartsStatus(dayIndex, lineIndex, value)
-                                    }
-                                  />
-                                </Grid.Column>
-                                <Grid.Column width={2}>
-                                  {order.exact_tier.exact_name}
-                                </Grid.Column>
-                                <Grid.Column width={1}>
-                                  {order.exact_order_number}{" "}
-                                  <Link
-                                    to={`/documents?orderid=${order.id}`}
-                                    target="_blank"
+    <div class="planning">
+      <Container>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Header as="h1"> Plannif </Header>
+          {planning.map((day, dayIndex) => {
+            return (
+              <>
+                <Ref innerRef={isToday(day.date) ? todayRef : undefined}>
+                  <Header as="h2">
+                    {" "}
+                    {day.date
+                      ? format(day.date, "iiii d/MM/y", { locale: fr })
+                      : "Lignes non planifiees"}{" "}
+                    {" - "}
+                    {moneyFormatter.format(
+                      day.orderLines.reduce((amount, line) => {
+                        return amount.plus(BigNumber(line.exact_amount));
+                      }, BigNumber(0))
+                    )}
+                  </Header>
+                </Ref>
+                <Droppable
+                  isDraggingOver={day.date === undefined}
+                  droppableId={`${dayIndex}`}
+                >
+                  {(provided, snapshot) => (
+                    <Ref innerRef={provided.innerRef}>
+                      <Grid
+                        divided="vertically"
+                        columns={7}
+                        style={getListStyle(snapshot.isDraggingOver)}
+                        {...provided.droppableProps}
+                      >
+                        {day.orderLines.map((line, lineIndex) => {
+                          const order = getOrderById(line.exact_order_id);
+                          return (
+                            <Draggable
+                              key={line.exact_id}
+                              draggableId={line.exact_id}
+                              index={lineIndex}
+                            >
+                              {(provided, snapshot) => (
+                                <Ref innerRef={provided.innerRef}>
+                                  <Grid.Row
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    style={getItemStyle(
+                                      snapshot.isDragging,
+                                      provided.draggableProps.style,
+                                      order.exact_tier.hex_color
+                                    )}
                                   >
-                                    <Icon name="folder open" />
-                                  </Link>
-                                </Grid.Column>
-                                <Grid.Column width={2}>
-                                  {order.exact_order_description}
-                                </Grid.Column>
-                                <Grid.Column width={1}>
-                                  {line.item_code}
-                                </Grid.Column>
-                                <Grid.Column width={2}>
-                                  {moneyFormatter.format(line.exact_amount)}
-                                </Grid.Column>
-                                <Grid.Column width={2}>
-                                  <Form>
-                                    <AutoSaveText
-                                      placeholder="Commentaires"
-                                      value={line.comments}
-                                      onSave={(value) => {
-                                        return saveLineComments(
-                                          dayIndex,
-                                          lineIndex,
-                                          value
-                                        );
-                                      }}
-                                    />
-                                  </Form>
-                                </Grid.Column>
-                                <Grid.Column width={4}>
-                                  {line.gamme_list.map((gamme, position) => {
-                                    return (
-                                      <Button
-                                        className={
-                                          line.gamme_status[position] === "1"
-                                            ? "green"
-                                            : ""
-                                        }
-                                        style={
-                                          line.gamme_status[position] !== "1"
-                                            ? {
-                                                backgroundColor: findHexColor(
-                                                  gamme
-                                                ),
-                                              }
-                                            : {}
-                                        }
-                                        onClick={() =>
-                                          toggleGamme(
+                                    <Grid.Column
+                                      width={1}
+                                      color={
+                                        partsStatusColorMap[
+                                          line.parts_status
+                                        ] || "red"
+                                      }
+                                    >
+                                      <Dropdown
+                                        value={line.parts_status || "non_dispo"}
+                                        fluid
+                                        labeled
+                                        options={partsStatusOptions}
+                                        onChange={(e, { value }) =>
+                                          setPartsStatus(
                                             dayIndex,
                                             lineIndex,
-                                            position
+                                            value
                                           )
                                         }
+                                      />
+                                    </Grid.Column>
+                                    <Grid.Column width={2}>
+                                      {order.exact_tier.exact_name}
+                                    </Grid.Column>
+                                    <Grid.Column width={1}>
+                                      <Popup
+                                        trigger={
+                                          <span>
+                                            {order.exact_order_number}
+                                            {"  "}
+                                            <Icon
+                                              circular
+                                              name="ellipsis horizontal"
+                                            />
+                                          </span>
+                                        }
+                                        content={order.exact_your_ref}
+                                      />
+                                      <Link
+                                        to={`/documents?orderid=${order.id}`}
+                                        target="_blank"
                                       >
-                                        {gamme}
-                                      </Button>
-                                    );
-                                  })}
-                                </Grid.Column>
-                              </Grid.Row>
-                            </Ref>
-                          )}
-                        </Draggable>
-                      );
-                    })}
-                    {provided.placeholder}
-                  </Grid>
-                </Ref>
-              )}
-            </Droppable>
-          </>
-        );
-      })}
-    </DragDropContext>
+                                        <Icon name="folder open" />
+                                      </Link>
+                                    </Grid.Column>
+                                    <Grid.Column width={2}>
+                                      {order.exact_order_description}
+                                    </Grid.Column>
+                                    <Grid.Column width={1}>
+                                      {line.item_code}
+                                    </Grid.Column>
+                                    <Grid.Column width={2}>
+                                      {moneyFormatter.format(line.exact_amount)}
+                                    </Grid.Column>
+                                    <Grid.Column width={2}>
+                                      <Form>
+                                        <AutoSaveText
+                                          placeholder="Commentaires"
+                                          value={line.comments}
+                                          onSave={(value) => {
+                                            return saveLineComments(
+                                              dayIndex,
+                                              lineIndex,
+                                              value
+                                            );
+                                          }}
+                                        />
+                                      </Form>
+                                    </Grid.Column>
+                                    <Grid.Column width={4}>
+                                      {line.gamme_list.map(
+                                        (gamme, position) => {
+                                          return (
+                                            <Button
+                                              className={
+                                                line.gamme_status[position] ===
+                                                "1"
+                                                  ? "green"
+                                                  : ""
+                                              }
+                                              style={
+                                                line.gamme_status[position] !==
+                                                "1"
+                                                  ? {
+                                                      backgroundColor: findHexColor(
+                                                        gamme
+                                                      ),
+                                                    }
+                                                  : {}
+                                              }
+                                              onClick={() =>
+                                                toggleGamme(
+                                                  dayIndex,
+                                                  lineIndex,
+                                                  position
+                                                )
+                                              }
+                                            >
+                                              {gamme}
+                                            </Button>
+                                          );
+                                        }
+                                      )}
+                                    </Grid.Column>
+                                  </Grid.Row>
+                                </Ref>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {provided.placeholder}
+                      </Grid>
+                    </Ref>
+                  )}
+                </Droppable>
+              </>
+            );
+          })}
+        </DragDropContext>
+      </Container>
+    </div>
   );
 }
 
