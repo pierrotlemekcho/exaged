@@ -7,6 +7,7 @@ import {
   Button,
   Icon,
   Dropdown,
+  Popup,
 } from "semantic-ui-react";
 import config from "config.js";
 import axiosInstance from "../axiosApi";
@@ -19,6 +20,7 @@ import {
   startOfDay,
   isToday,
 } from "date-fns";
+import { fr } from "date-fns/locale";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { BigNumber } from "bignumber.js";
 import { Link } from "react-router-dom";
@@ -297,7 +299,7 @@ function Plannif() {
               <Header as="h2">
                 {" "}
                 {day.date
-                  ? format(day.date, "iiii d/MM/y")
+                  ? format(day.date, "iiii d/MM/y", { locale: fr })
                   : "Lignes non planifiees"}{" "}
                 {" - "}
                 {moneyFormatter.format(
@@ -359,7 +361,19 @@ function Plannif() {
                                   {order.exact_tier.exact_name}
                                 </Grid.Column>
                                 <Grid.Column width={1}>
-                                  {order.exact_order_number}{" "}
+                                  <Popup
+                                    trigger={
+                                      <span>
+                                        {order.exact_order_number}
+                                        {"  "}
+                                        <Icon
+                                          circular
+                                          name="ellipsis horizontal"
+                                        />
+                                      </span>
+                                    }
+                                    content={order.exact_your_ref}
+                                  />
                                   <Link
                                     to={`/documents?orderid=${order.id}`}
                                     target="_blank"

@@ -44,4 +44,4 @@ class WebCamAdmin(admin.ModelAdmin):
 
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["id", "code", "hex_color", "color_span"]

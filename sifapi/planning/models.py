@@ -225,3 +225,11 @@ class Operation(models.Model):
 
     def __str__(self):
         return f"{self.code}"
+
+    @property
+    def color_span(self):
+        if self.hex_color:
+            return format_html(
+                '<span style="background-color: {};">&nbsp;&nbsp;&nbsp</span>',
+                self.hex_color,
+            )
