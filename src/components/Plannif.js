@@ -275,12 +275,12 @@ function Plannif() {
     };
   }
 
-  function getItemStyle(isDragging, draggableStyle) {
+  function getItemStyle(isDragging, draggableStyle, background = "") {
     return {
       // some basic styles to make the items look a bit nicer
 
       // change background colour if dragging
-      background: isDragging ? "lightgreen" : "",
+      background: isDragging ? "lightgreen" : background,
 
       // styles we need to apply on draggables
       ...draggableStyle,
@@ -334,7 +334,8 @@ function Plannif() {
                                 {...provided.dragHandleProps}
                                 style={getItemStyle(
                                   snapshot.isDragging,
-                                  provided.draggableProps.style
+                                  provided.draggableProps.style,
+                                  order.exact_tier.hex_color
                                 )}
                               >
                                 <Grid.Column

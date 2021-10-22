@@ -3,6 +3,7 @@ import re
 
 from django.conf import settings
 from django.db import models
+from django.utils.html import format_html
 
 
 class AlembicVersion(models.Model):
@@ -168,6 +169,19 @@ class Tier(models.Model):
     exact_is_purchase = models.IntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    hex_color = models.CharField(max_length=7, null=True)
+
+    # Color span used in the admin interface
+    @property
+    def color_span(self):
+        if self.hex_color:
+            return format_html(
+                '<span style="background-color: {};">&nbsp;&nbsp;&nbsp</span>',
+                self.hex_color,
+            )
+
+    def __str__(self):
+        return f"{self.exact_name}"
 
     class Meta:
         db_table = "tier"
