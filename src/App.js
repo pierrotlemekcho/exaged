@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import { Container, Image, Menu } from "semantic-ui-react";
+import axiosInstance from "./axiosApi";
+import config from "config.js";
 
-import { BrowserRouter as Router, Switch, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import ExaCam from "components/ExaCam.js";
 import Documents from "components/Documents.js";
 import Plannif from "components/Plannif.js";
@@ -16,7 +23,6 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-
 function App() {
   return (
     <Router>
@@ -25,8 +31,23 @@ function App() {
   );
 }
 
-function  AppInRouter() {
+function AppInRouter() {
   let query = useQuery();
+  const api_url = config.api_url;
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    axiosInstance
+      .get(`${api_url}/me`)
+      .then(() => {
+        setIsLoggedIn(true);
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+      });
+  }, []);
+
   return (
     <>
       <Menu fixed="top" inverted>
@@ -43,21 +64,27 @@ function  AppInRouter() {
           <Menu.Item href="/plannif " as="a">
             Plannif
           </Menu.Item>
+          <Menu.Item
+            href={isLoggedIn ? "/admin/logout/" : "/admin/login/?next=/plannif"}
+            as="a"
+          >
+            {isLoggedIn ? "Log Out" : "Log in "}
+          </Menu.Item>
         </Container>
       </Menu>
       <Switch>
         <Route path="/documents">
-          <Documents orderId = {query.get("orderid")}/>
+          <Documents orderId={query.get("orderid")} />
         </Route>
         <Route path="/plannif">
-          <Plannif />
+          <Plannif showAdminView={isLoggedIn} />
         </Route>
         <Route path="/">
           <ExaCam />
         </Route>
       </Switch>
     </>
-  )
+  );
 }
 
 export default App;
