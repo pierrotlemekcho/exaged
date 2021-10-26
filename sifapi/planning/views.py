@@ -6,15 +6,19 @@ from django.http import FileResponse
 from pdf2image import convert_from_bytes
 from PIL import Image
 from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import (action, api_view,
+                                       authentication_classes,
+                                       permission_classes)
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 
 from planning import samba
 from planning.models import Commande, LigneDeCommande, Operation, Tier, WebCam
 from planning.renderers import JPEGRenderer
-from planning.serializers import (CommandeSerializer, OperationSerializer,
+from planning.serializers import (AnonymousCommandeSerializer,
+                                  AnonymousOrderLineSerializer,
+                                  CommandeSerializer, OperationSerializer,
                                   OrderLineSerializer, TierSerializer,
                                   WebCamSerializer)
 
@@ -22,6 +26,17 @@ EXACT_STATUS_CLOSED = 21
 EXACT_STATUS_CANCELLED = 45
 EXACT_STATUS_OPEN = 12
 # Create your views here.
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+# find out who is logged in
+def me(request, format=None):
+    content = {
+        "user": str(request.user),  # `django.contrib.auth.User` instance.
+        "auth": str(request.auth),  # None
+    }
+    return Response(content)
 
 
 class WebCamViewSet(viewsets.ReadOnlyModelViewSet):
@@ -74,7 +89,12 @@ class ClientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CommandeViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = CommandeSerializer
+    def get_serializer_class(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return CommandeSerializer
+
+        return AnonymousCommandeSerializer
+
     queryset = Commande.objects.all().order_by("-id")
     filterset_fields = {"exact_tier_id": ["exact"], "exact_status": ["exact", "in"]}
 
@@ -154,8 +174,13 @@ class OperationViewSet(viewsets.ReadOnlyModelViewSet):
 # Only updat for now.
 class BulkOrderLineViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     permission_classes = [AllowAny]
-    serializer_class = OrderLineSerializer
     queryset = LigneDeCommande.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return OrderLineSerializer
+
+        return AnonymousOrderLineSerializer
 
     @action(detail=False, methods=["put"], url_name="bulk_update")
     def bulk_update(self, request, **kwargs):
