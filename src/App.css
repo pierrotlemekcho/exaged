@@ -17,3 +17,22 @@
 .planning .ui .button {
   font-size: 12px !important;
 }
+
+.planning .ui.grid > .row {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.planning .ui.grid > .row > .green.column,
+.planning .ui.grid > .row > .red.column,
+.planning .ui.grid > .row > .yellow.column {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.planning .ui[class*="vertically divided"].grid > .row > .column {
+  margin-top: 0;
+  margin-bottom: 0;
+}
