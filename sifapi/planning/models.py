@@ -121,6 +121,7 @@ class LigneDeCommande(models.Model):
     )
     exact_line_number = models.IntegerField(blank=True, null=True)
     exact_item_description = models.CharField(max_length=255, blank=True, null=True)
+    exact_notes = models.CharField(max_length=255, blank=True, null=True)
     exact_amount = models.DecimalField(
         max_digits=20, decimal_places=3, blank=True, null=True
     )

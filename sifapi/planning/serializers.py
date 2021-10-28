@@ -42,6 +42,7 @@ class AnonymousOrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "exact_line_number",
             "parts_status",
             "comments",
+            "exact_notes",
         ]
         read_only_fields = [
             "gamme",
@@ -52,6 +53,7 @@ class AnonymousOrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "scheduled_at",
             "schedule_priority",
             "comments",
+            "exact_notes",
         ]
 
 
@@ -73,8 +75,9 @@ class OrderLineSerializer(serializers.HyperlinkedModelSerializer):
             "exact_amount",
             "parts_status",
             "comments",
+            "exact_notes",
         ]
-        read_only_fields = ["gamme", "gamme_list", "item_code"]
+        read_only_fields = ["gamme", "gamme_list", "item_code", "exact_notes"]
 
 
 class CommandeSerializer(serializers.HyperlinkedModelSerializer):
