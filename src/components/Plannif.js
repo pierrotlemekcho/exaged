@@ -3,6 +3,7 @@ import {
   Grid,
   Ref,
   Header,
+  Label,
   Form,
   Button,
   Icon,
@@ -325,7 +326,7 @@ function Plannif({ showAdminView }) {
                       <Ref innerRef={provided.innerRef}>
                         <Grid
                           divided="vertically"
-                          stackable
+                          doubling
                           columns={showAdminView ? 7 : 6}
                           style={getListStyle(snapshot.isDraggingOver)}
                           {...provided.droppableProps}
@@ -378,7 +379,7 @@ function Plannif({ showAdminView }) {
                                       <Grid.Column width={2}>
                                         {order.exact_tier.exact_name}
                                       </Grid.Column>
-                                      <Grid.Column width={2}>
+                                      <Grid.Column width={1}>
                                         <Popup
                                           trigger={
                                             <span>
@@ -412,6 +413,10 @@ function Plannif({ showAdminView }) {
                                           )}
                                         </Grid.Column>
                                       ) : null}
+                                      <Grid.Column width={2}>
+                                        {line.exact_notes}
+                                      </Grid.Column>
+
                                       <Grid.Column
                                         width={showAdminView ? 2 : 3}
                                       >
@@ -431,10 +436,14 @@ function Plannif({ showAdminView }) {
                                             />
                                           </Form>
                                         ) : (
-                                          line.comments
+                                          line.comments && (
+                                            <Label color="black">
+                                              <strong>{line.comments}</strong>
+                                            </Label>
+                                          )
                                         )}
                                       </Grid.Column>
-                                      <Grid.Column width={4}>
+                                      <Grid.Column width={3}>
                                         {line.gamme_list.map(
                                           (gamme, position) => {
                                             return (
