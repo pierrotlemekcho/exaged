@@ -151,6 +151,7 @@ class Synchronizer:
                 line.exact_item_id = exact_line["Item"]
                 line.exact_line_number = exact_line["LineNumber"]
                 line.exact_item_description = exact_line["ItemDescription"]
+                line.exact_notes = exact_line["Notes"]
                 line.exact_amount = exact_line["AmountDC"]
                 line.exact_order = commande
                 line.save()
