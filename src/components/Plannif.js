@@ -177,11 +177,12 @@ function Plannif({ showAdminView }) {
           undefined,
           allLines.filter(
             (line) =>
-              (line.gamme && !line.scheduled_at) ||
-              isBefore(
-                startOfDay(new Date(line.scheduled_at)),
-                addDays(startOfDay(new Date()), -DAYS_IN_THE_PAST)
-              )
+              line.gamme &&
+              (!line.scheduled_at ||
+                isBefore(
+                  startOfDay(new Date(line.scheduled_at)),
+                  addDays(startOfDay(new Date()), -DAYS_IN_THE_PAST)
+                ))
           )
         ),
       ];
@@ -274,7 +275,6 @@ function Plannif({ showAdminView }) {
   function getListStyle(isDraggingOver) {
     return {
       background: isDraggingOver ? "lightblue" : "lightgrey",
-      padding: "8px",
     };
   }
 
@@ -291,7 +291,7 @@ function Plannif({ showAdminView }) {
   }
 
   return (
-    <div class="planning">
+    <div className="planning">
       <Container>
         <DragDropContext onDragEnd={onDragEnd}>
           <Header as="h1"> Plannif </Header>
@@ -325,6 +325,7 @@ function Plannif({ showAdminView }) {
                       <Ref innerRef={provided.innerRef}>
                         <Grid
                           divided="vertically"
+                          stackable
                           columns={showAdminView ? 7 : 6}
                           style={getListStyle(snapshot.isDraggingOver)}
                           {...provided.droppableProps}
@@ -377,7 +378,7 @@ function Plannif({ showAdminView }) {
                                       <Grid.Column width={2}>
                                         {order.exact_tier.exact_name}
                                       </Grid.Column>
-                                      <Grid.Column width={1}>
+                                      <Grid.Column width={2}>
                                         <Popup
                                           trigger={
                                             <span>
@@ -401,11 +402,11 @@ function Plannif({ showAdminView }) {
                                       <Grid.Column width={2}>
                                         {order.exact_order_description}
                                       </Grid.Column>
-                                      <Grid.Column width={1}>
+                                      <Grid.Column width={2}>
                                         {line.item_code}
                                       </Grid.Column>
                                       {showAdminView ? (
-                                        <Grid.Column width={2}>
+                                        <Grid.Column width={1}>
                                           {moneyFormatter.format(
                                             line.exact_amount
                                           )}
@@ -419,6 +420,7 @@ function Plannif({ showAdminView }) {
                                             <AutoSaveText
                                               placeholder="Commentaires"
                                               value={line.comments}
+                                              rows={1}
                                               onSave={(value) => {
                                                 return saveLineComments(
                                                   dayIndex,
