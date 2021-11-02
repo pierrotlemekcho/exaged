@@ -41,6 +41,8 @@ def run():
     logger.info("Start Sync Commandes")
     counter = synchronizer.synchronize_commandes()
     logger.info(f"{counter} commandes maj")
+    counter = synchronizer.synchronize_deleted_commandes()
+    logger.info(f"{counter} commandes supprimes")
 
     # Save last success sync for next time
     last_sync.timestamp = now
