@@ -1,11 +1,14 @@
 import datetime
 
 from exactonline.resource import GET
-from pytz import timezone, utc
+from pytz import timezone
 
 from planning.models import (Article, Commande, Devis, Gamme, LigneDeCommande,
                              Tier, TierClient, TierSupplier)
 from planning.util import parse_exact_api_date
+
+EXACT_STATUS_OPEN = 12
+EXACT_STATUS_PARTIAL = 20
 
 
 class Synchronizer:
@@ -144,6 +147,13 @@ class Synchronizer:
             commande.save()
 
             exact_lines = exact_order["SalesOrderLines"]["results"]
+            # delete lines that are not in exact anymore
+            all_exact_line_ids = [exact_line["ID"] for exact_line in exact_lines]
+
+            for line in commande.lines.all():
+                if line.exact_id not in all_exact_line_ids:
+                    line.delete()
+
             for exact_line in exact_lines:
                 line = LigneDeCommande.objects.filter(exact_id=exact_line["ID"]).first()
                 if not line:
@@ -156,4 +166,27 @@ class Synchronizer:
                 line.exact_order = commande
                 line.save()
             counter = counter + 1
+        return counter
+
+    ## Look for all open or partial orders that are still in our db but not in exact and delete them
+    def synchronize_deleted_commandes(self):
+        counter = 0
+        partial_or_open_exact_commandes = self.api.restv1(
+            GET(
+                f"salesorder/SalesOrders?$select=OrderID,Status&$filter=Status+eq+{EXACT_STATUS_PARTIAL}+or+Status+eq+{EXACT_STATUS_OPEN}"
+            )
+        )
+
+        exact_commandes_id = [
+            commande["OrderID"] for commande in partial_or_open_exact_commandes
+        ]
+
+        commandes = Commande.objects.filter(
+            exact_status__in=[EXACT_STATUS_PARTIAL, EXACT_STATUS_OPEN]
+        )
+
+        for commande in commandes:
+            if commande.exact_order_id not in exact_commandes_id:
+                commande.delete()
+                counter = counter + 1
         return counter
