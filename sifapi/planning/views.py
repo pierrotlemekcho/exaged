@@ -25,7 +25,7 @@ from planning.serializers import (AnonymousCommandeSerializer,
 EXACT_STATUS_CLOSED = 21
 EXACT_STATUS_CANCELLED = 45
 EXACT_STATUS_OPEN = 12
-# Create your views here.
+EXACT_STATUS_PARTIAL = 20
 
 
 @api_view(["GET"])

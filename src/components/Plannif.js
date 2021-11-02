@@ -144,7 +144,7 @@ function Plannif({ showAdminView }) {
   }
 
   async function fetchPlannifOrders() {
-    return axiosInstance.get(`${api_url}/commandes?exact_status__in=12`);
+    return axiosInstance.get(`${api_url}/commandes?exact_status__in=12,20`);
   }
 
   async function fetchAllOperations() {
