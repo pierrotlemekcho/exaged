@@ -10,7 +10,7 @@ install:
 
 api-server:
 	. ./env/bin/activate; \
-	python start-flask.py
+	python sifapi/manage.py runserver
 
 frontend-server:
 	yarn start
