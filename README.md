@@ -81,7 +81,7 @@ docker run -it \
       --expose 139 -p 127.0.0.2:139:139  \
       --expose 445 -p 127.0.0.2:445:445 \
       -d dperson/samba -p \
-      -u "exaged;Ged.2020" \
+      -u "user;password" \
       -s "Workspace$;/share;yes;no;no" \
       -g "netbios name=SIF-NEW" \
       -g "server min protocol = LANMAN1"
