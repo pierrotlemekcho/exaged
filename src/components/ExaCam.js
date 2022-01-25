@@ -10,7 +10,7 @@ import {
   Message,
   List,
 } from "semantic-ui-react";
-import axios from "axios";
+import axiosInstance from "../axiosApi";
 import config from "config.js";
 import Dropzone from "react-dropzone";
 
@@ -28,13 +28,13 @@ function ExaCam() {
   const [files, setFiles] = useState([]);
 
   async function fetchCameras() {
-    let result = await axios.get(`${api_url}/cameras`);
+    let result = await axiosInstance.get(`${api_url}/cameras`);
     setCameras(result.data.results);
     setSelectedCamera(result.data.results[0]);
   }
 
   async function fetchClients() {
-    let result = await axios.get(`${api_url}/clients`);
+    let result = await axiosInstance.get(`${api_url}/clients`);
     setClients(
       result.data.results.map((client) => {
         return {
@@ -49,7 +49,7 @@ function ExaCam() {
   async function fetchOrders(selectedClientId) {
     let orders = [];
     if (selectedClientId) {
-      let result = await axios.get(
+      let result = await axiosInstance.get(
         `${api_url}/commandes?exact_tier_id=${selectedClientId}&exact_status=12`
       );
       orders = result.data.results.map((order) => {
@@ -76,7 +76,7 @@ function ExaCam() {
       formData.append("file", files[0]);
     }
     formData.append("order_id", selectedOrderId);
-    result = await axios.post(url, formData, {
+    result = await axiosInstance.post(url, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

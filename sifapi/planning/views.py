@@ -171,7 +171,7 @@ class OperationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Operation.objects.all().order_by("-id")
 
 
-# Only updat for now.
+# Only update for now.
 class BulkOrderLineViewSet(mixins.UpdateModelMixin, viewsets.GenericViewSet):
     permission_classes = [AllowAny]
     queryset = LigneDeCommande.objects.all()
