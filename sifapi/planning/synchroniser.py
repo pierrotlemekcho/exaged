@@ -44,9 +44,10 @@ class Synchronizer:
 
     def synchronize_tiers(self):
         counter = 0
-        tiers = self.api.relations.filter(
-            select="ID,Code,Name,IsSales,IsSupplier,IsReseller,IsSales,IsPurchase",
-            filter=f"Modified gt DateTime'{self.since_string}'",
+        tiers = self.api.restv1(
+            GET(
+                f"bulk/crm/Accounts?$select=ID,Code,Name,IsSales,IsSupplier,IsReseller,IsSales,IsPurchase&$filter=Modified+gt+DateTime'{self.since_string}'"
+            )
         )
         for exact_tier in tiers:
             tier = self._build_tier(exact_tier)
